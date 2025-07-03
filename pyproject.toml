@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentic-pseudo"
+version = "0.1.0"
+description = "Agentic Task Management System Prototype"
+authors = [
+    {name = "Developer", email = "dev@example.com"},
+]
+dependencies = [
+    "pydantic>=2.0.0",
+    "upstash-redis>=0.15.0",
+    "python-dotenv>=1.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.23.0",
+    "httpx>=0.24.0",
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "ruff>=0.1.0",
+    "pyright>=1.1.0",
+    "dspy-ai>=2.5.0",
+]
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit>=3.0.0",
+    "pytest-cov>=4.0.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "N", "B", "S", "A", "C4", "T20", "PT"]
+ignore = ["S101", "S311"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pyright]
+pythonVersion = "3.11"
+include = ["src"]
+exclude = ["output", "tests"]
+reportMissingImports = true
+reportMissingTypeStubs = false
