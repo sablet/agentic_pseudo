@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
@@ -21,35 +21,6 @@ app.add_middleware(
 )
 
 
-def decode_unicode_in_task_data(task_data):
-    """TaskDataオブジェクト内のUnicode文字列をデコード"""
-    def decode_unicode_string(text):
-        if isinstance(text, str):
-            try:
-                return text.encode().decode('unicode_escape')
-            except UnicodeDecodeError:
-                return text
-        return text
-    
-    def decode_task_list(tasks):
-        if not tasks:
-            return tasks
-        
-        decoded_tasks = []
-        for task in tasks:
-            decoded_task = task.model_copy()
-            if hasattr(decoded_task, 'result') and decoded_task.result:
-                decoded_task.result = decode_unicode_string(decoded_task.result)
-            if hasattr(decoded_task, 'task') and decoded_task.task:
-                decoded_task.task = decode_unicode_string(decoded_task.task)
-            decoded_tasks.append(decoded_task)
-        return decoded_tasks
-    
-    if task_data:
-        task_data.daily_tasks = decode_task_list(task_data.daily_tasks)
-        task_data.info_references = decode_task_list(task_data.info_references)
-    
-    return task_data
 
 kvs_repo = KVSRepository()
 planner_agent = PlannerAgent(kvs_repo)
@@ -127,10 +98,6 @@ async def execute_task_plan(session_id: str) -> Dict[str, Any]:
 @app.get("/api/tasks/status/{session_id}")
 async def get_task_status(session_id: str) -> TaskStatusResponse:
     task_data = kvs_repo.get_task_data(session_id)
-    
-    # Unicode文字列をデコード
-    if task_data:
-        task_data = decode_unicode_in_task_data(task_data)
     
     return TaskStatusResponse(
         session_id=session_id,

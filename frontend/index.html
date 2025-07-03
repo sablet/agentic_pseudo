@@ -4,149 +4,387 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agentic Task Management System</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
         }
         
-        .container {
-            background: white;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .app-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
         }
         
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 30px;
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         
-        .section {
-            margin-bottom: 30px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            background-color: #fafafa;
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
         
-        .section h2 {
-            color: #555;
-            margin-top: 0;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 5px;
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f8fafc;
         }
         
-        .form-group {
-            margin-bottom: 15px;
+        .search-bar {
+            position: relative;
+            width: 300px;
         }
         
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        input, textarea, button, select {
+        .search-bar input {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 8px 12px;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
             font-size: 14px;
         }
         
+        .search-bar input::placeholder {
+            color: #cbd5e1;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            margin-top: 60px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .create-task-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .create-task-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+        
+        .task-filters {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        
+        .filter-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .filter-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: white;
+        }
+        
+        .task-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px;
+        }
+        
+        .task-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .task-item:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+        }
+        
+        .task-item.active {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+        }
+        
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        
+        .task-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            line-height: 1.4;
+        }
+        
+        .task-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .task-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 8px;
+        }
+        
+        .task-agent {
+            background-color: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .task-time {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        
+        .status-情報収集中 { background-color: #dbeafe; color: #1e40af; }
+        .status-分析中 { background-color: #fef3c7; color: #d97706; }
+        .status-レポート作成中 { background-color: #e0e7ff; color: #5b21b6; }
+        .status-完了 { background-color: #dcfce7; color: #16a34a; }
+        .status-エラー { background-color: #fecaca; color: #dc2626; }
+        .status-待機中 { background-color: #f1f5f9; color: #475569; }
+        .status-pending { background-color: #f1f5f9; color: #475569; }
+        .status-in_progress { background-color: #fef3c7; color: #d97706; }
+        .status-completed { background-color: #dcfce7; color: #16a34a; }
+        .status-failed { background-color: #fecaca; color: #dc2626; }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-top: 60px;
+            overflow: hidden;
+        }
+        
+        .content-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+        
+        .content-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        .content-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+        
+        .section {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .section h2 {
+            color: #1e293b;
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            border-bottom: 2px solid #1e40af;
+            padding-bottom: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
         textarea {
-            height: 100px;
+            height: 120px;
             resize: vertical;
         }
         
         button {
-            background-color: #007bff;
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
             color: white;
             border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         
         button:hover {
-            background-color: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
         }
         
         button:disabled {
-            background-color: #6c757d;
+            background: #9ca3af;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         
         .status-box {
-            background-color: #e9f7ef;
-            border: 1px solid #d4edda;
-            border-radius: 4px;
-            padding: 15px;
-            margin-top: 10px;
+            background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+            border: 1px solid #bbf7d0;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+            color: #166534;
+            font-size: 14px;
         }
         
         .error-box {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            border-radius: 4px;
-            padding: 15px;
-            margin-top: 10px;
-            color: #721c24;
+            background: linear-gradient(135deg, #fef2f2 0%, #fef7f7 100%);
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+            color: #dc2626;
+            font-size: 14px;
         }
         
         .session-info {
-            background-color: #d1ecf1;
-            border: 1px solid #bee5eb;
-            border-radius: 4px;
-            padding: 10px;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-        
-        .task-item {
-            background-color: white;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 15px;
-            margin-bottom: 10px;
-        }
-        
-        .task-status {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        .status-pending { background-color: #fff3cd; color: #856404; }
-        .status-in_progress { background-color: #cce5ff; color: #004085; }
-        .status-completed { background-color: #d4edda; color: #155724; }
-        .status-failed { background-color: #f8d7da; color: #721c24; }
-        
-        .agents-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .agent-card {
-            background-color: white;
-            border: 1px solid #dee2e6;
+            background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+            border: 1px solid #bfdbfe;
             border-radius: 6px;
-            padding: 15px;
-        }
-        
-        .agent-card h4 {
-            margin-top: 0;
-            color: #007bff;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #1e40af;
+            font-weight: 600;
         }
         
         .progress-section {
@@ -155,12 +393,12 @@
         
         .progress-bar {
             width: 100%;
-            height: 20px;
-            background-color: #e9ecef;
-            border-radius: 10px;
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
             overflow: hidden;
             display: flex;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
         
         .progress-segment {
@@ -170,95 +408,201 @@
         
         .progress-legend {
             display: flex;
-            gap: 15px;
+            gap: 16px;
             flex-wrap: wrap;
-            font-size: 12px;
+            font-size: 13px;
         }
         
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
         }
         
         .result-content {
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 5px;
-            border-left: 4px solid #007bff;
-            font-family: monospace;
-            font-size: 12px;
-            max-height: 200px;
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 8px;
+            border-left: 4px solid #3b82f6;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+            font-size: 13px;
+            max-height: 300px;
             overflow-y: auto;
             white-space: pre-wrap;
         }
         
-        select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        .flow-diagram {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            overflow: auto;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .empty-state-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .empty-state-subtext {
             font-size: 14px;
-            background-color: white;
+            color: #94a3b8;
+        }
+        
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 40vh;
+                margin-top: 0;
+            }
+            
+            .main-content {
+                margin-top: 0;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🤖 Agentic Task Management System</h1>
-        
-        <div id="sessionInfo" class="session-info" style="display: none;">
-            セッションID: <span id="currentSessionId"></span>
-        </div>
-        
-        <div class="section">
-            <h2>📋 セッション管理</h2>
-            <button onclick="createSession()">新しいセッションを作成</button>
-            <div id="sessionStatus"></div>
-        </div>
-        
-        <div class="section">
-            <h2>🎯 ヒアリング結果登録</h2>
-            <div class="form-group">
-                <label for="useCaseSelect">サンプルユースケース選択:</label>
-                <select id="useCaseSelect" onchange="loadUseCase()">
-                    <option value="">-- カスタム入力 --</option>
-                    <option value="market_research">市場調査レポート作成</option>
-                    <option value="data_analysis">データ分析レポート作成</option>
-                    <option value="project_management">複合的プロジェクト管理</option>
-                </select>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">🤖 Agentic Task Manager</div>
+                <div class="search-bar">
+                    <input type="text" placeholder="タスクを検索..." id="searchInput">
+                </div>
             </div>
-            <div class="form-group">
-                <label for="hearingResult">ヒアリング結果:</label>
-                <textarea id="hearingResult" placeholder="ユーザーの要望や詳細を入力してください..."></textarea>
+            <div class="header-right">
+                <div id="sessionInfo" class="session-info" style="display: none;">
+                    セッション: <span id="currentSessionId"></span>
+                </div>
+                <div class="user-info">
+                    <div class="user-avatar">👤</div>
+                </div>
             </div>
-            <button onclick="saveHearing()">ヒアリング結果を保存</button>
-            <div id="hearingStatus"></div>
         </div>
-        
-        <div class="section">
-            <h2>📝 タスクプラン作成</h2>
-            <div class="form-group">
-                <label for="userInstruction">ユーザー指示:</label>
-                <textarea id="userInstruction" placeholder="実行したいタスクの内容を入力してください..."></textarea>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <button class="create-task-btn" onclick="createSession()">
+                    ➕ 新しいセッションを作成
+                </button>
             </div>
-            <button onclick="createTaskPlan()">タスクプランを作成</button>
-            <div id="planStatus"></div>
+            
+            <div class="task-filters">
+                <div class="filter-group">
+                    <label>ステータス</label>
+                    <select class="filter-select" id="statusFilter" onchange="filterTasks()">
+                        <option value="">すべて</option>
+                        <option value="pending">待機中</option>
+                        <option value="in_progress">実行中</option>
+                        <option value="completed">完了</option>
+                        <option value="failed">失敗</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>エージェント</label>
+                    <select class="filter-select" id="agentFilter" onchange="filterTasks()">
+                        <option value="">すべて</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="task-list" id="taskList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <div class="empty-state-text">タスクがありません</div>
+                    <div class="empty-state-subtext">新しいセッションを作成してください</div>
+                </div>
+            </div>
         </div>
-        
-        <div class="section">
-            <h2>⚡ タスク実行・監視</h2>
-            <button onclick="executeTaskPlan()">タスクプランを実行</button>
-            <button onclick="getTaskStatus()">ステータスを更新</button>
-            <div id="executionStatus"></div>
-            <div id="taskList"></div>
-        </div>
-        
-        <div class="section">
-            <h2>🔧 利用可能なエージェント</h2>
-            <button onclick="getAvailableAgents()">エージェント一覧を取得</button>
-            <div id="agentsList"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="content-header">
+                <div class="content-title" id="contentTitle">タスク管理システム</div>
+                <div id="sessionStatus"></div>
+            </div>
+            
+            <div class="content-body" id="contentBody">
+                <div class="section">
+                    <h2>🎯 ヒアリング結果登録</h2>
+                    <div class="form-group">
+                        <label for="useCaseSelect">サンプルユースケース選択:</label>
+                        <select id="useCaseSelect" onchange="loadUseCase()">
+                            <option value="">-- カスタム入力 --</option>
+                            <option value="market_research">市場調査レポート作成</option>
+                            <option value="data_analysis">データ分析レポート作成</option>
+                            <option value="project_management">複合的プロジェクト管理</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="hearingResult">ヒアリング結果:</label>
+                        <textarea id="hearingResult" placeholder="ユーザーの要望や詳細を入力してください..."></textarea>
+                    </div>
+                    <button onclick="saveHearing()">ヒアリング結果を保存</button>
+                    <div id="hearingStatus"></div>
+                </div>
+                
+                <div class="section">
+                    <h2>📝 タスクプラン作成</h2>
+                    <div class="form-group">
+                        <label for="userInstruction">ユーザー指示:</label>
+                        <textarea id="userInstruction" placeholder="実行したいタスクの内容を入力してください..."></textarea>
+                    </div>
+                    <button onclick="createTaskPlan()">タスクプランを作成</button>
+                    <div id="planStatus"></div>
+                </div>
+                
+                <div class="section">
+                    <h2>⚡ タスク実行・監視</h2>
+                    <button onclick="executeTaskPlan()">タスクプランを実行</button>
+                    <button onclick="getTaskStatus()">ステータスを更新</button>
+                    <div id="executionStatus"></div>
+                    <div id="taskProgress"></div>
+                </div>
+                
+                <div class="section">
+                    <h2>📊 タスクフロー</h2>
+                    <div id="flowDiagram" class="flow-diagram">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔄</div>
+                            <div class="empty-state-text">フロー図はタスク作成後に表示されます</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2>🔧 利用可能なエージェント</h2>
+                    <button onclick="getAvailableAgents()">エージェント一覧を取得</button>
+                    <div id="agentsList"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -266,12 +610,149 @@
         const API_BASE_URL = 'http://localhost:8000';
         let currentSessionId = null;
 
+        // Global variables
+        let allTasks = [];
+        let selectedTaskId = null;
+        let availableAgents = [];
+        
+        // Initialize Mermaid
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+
+        // Unicode エスケープ文字をデコードする関数
+        function decodeUnicodeText(text) {
+            if (typeof text !== 'string') return text;
+            try {
+                // デバッグ用ログ
+                if (text.includes('\\u')) {
+                    console.log('Original text:', text);
+                }
+                
+                // 複数の文字化けパターンに対応
+                let decoded = text;
+                
+                // パターン1: \uXXXX形式のUnicodeエスケープ
+                decoded = decoded.replace(/\\u[\dA-Fa-f]{4}/g, function(match) {
+                    return String.fromCharCode(parseInt(match.replace(/\\u/g, ''), 16));
+                });
+                
+                // パターン2: UTF-8の誤った解釈（日本語特有の文字化け）
+                // "ã"は文字化けの典型例
+                const charMapping = {
+                    'ã': '',
+                    'ã': 'の',
+                    'ã': 'を',
+                    'ã': 'し',
+                    'ã': 'て',
+                    'ã': 'い',
+                    'ã': 'る',
+                    'ã': 'か',
+                    'ã': 'と',
+                    'ã': 'す',
+                    'ã': 'で',
+                    'ã': 'に',
+                    'ã': 'は',
+                    'ã': 'が',
+                    'ã': 'も',
+                    'ã': 'ま',
+                    'ã': 'た',
+                    'ã': 'き',
+                    'ã': 'な',
+                    'ã': 'れ',
+                    'ã': 'ら',
+                    'ã': 'こ',
+                    'ã': 'り',
+                    'ã': 'さ',
+                    'ã': 'け',
+                    'ã': 'ん',
+                    'ã': 'あ',
+                    'ã': 'や',
+                    'ã': 'み',
+                    'ã': 'う',
+                    'ã': 'え',
+                    'ã': 'め',
+                    'ã': 'せ',
+                    'ã': 'ち',
+                    'ã': 'つ',
+                    'ã': 'ひ',
+                    'ã': 'ね',
+                    'ã': 'へ',
+                    'ã': 'よ',
+                    'ã': 'ほ',
+                    'ã': 'わ',
+                    'ã': 'そ',
+                    'ã': 'ぬ',
+                    'ã': 'ふ',
+                    'ã': 'ゆ',
+                    'ã': 'お',
+                    'ä': '',
+                    'è': '',
+                    'æ': ''
+                };
+                
+                // 文字化けパターンマッピングを適用
+                for (const [corrupted, correct] of Object.entries(charMapping)) {
+                    decoded = decoded.replace(new RegExp(corrupted, 'g'), correct);
+                }
+                
+                // パターン3: base64デコード（可能性として）
+                try {
+                    if (decoded.match(/^[A-Za-z0-9+/]+=*$/)) {
+                        const base64Decoded = atob(decoded);
+                        if (base64Decoded.length > 0 && base64Decoded !== decoded) {
+                            decoded = base64Decoded;
+                        }
+                    }
+                } catch (e) {
+                    // base64デコードに失敗した場合は元のテキストを使用
+                }
+                
+                // デバッグ用ログ
+                if (decoded !== text) {
+                    console.log('Decoded text:', decoded);
+                }
+                
+                return decoded;
+            } catch (error) {
+                console.warn('Unicode decode error:', error);
+                return text;
+            }
+        }
+
+        // オブジェクトの全ての文字列プロパティをデコードする関数
+        function decodeObjectText(obj) {
+            if (obj === null || obj === undefined) return obj;
+            
+            if (typeof obj === 'string') {
+                // 英字のみの文字列（エージェント名など）はデコードしない
+                if (/^[a-zA-Z_]+$/.test(obj)) {
+                    return obj;
+                }
+                return decodeUnicodeText(obj);
+            }
+            
+            if (Array.isArray(obj)) {
+                return obj.map(item => decodeObjectText(item));
+            }
+            
+            if (typeof obj === 'object') {
+                const decoded = {};
+                for (const [key, value] of Object.entries(obj)) {
+                    // キー名も英字のみの場合はそのまま使用
+                    const decodedKey = /^[a-zA-Z_]+$/.test(key) ? key : decodeUnicodeText(key);
+                    decoded[decodedKey] = decodeObjectText(value);
+                }
+                return decoded;
+            }
+            
+            return obj;
+        }
+
         async function apiCall(endpoint, method = 'GET', data = null) {
             try {
                 const options = {
                     method: method,
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json; charset=utf-8',
                     }
                 };
                 
@@ -285,7 +766,9 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
-                return await response.json();
+                const responseData = await response.json();
+                // レスポンスデータのUnicodeエスケープ文字をデコード
+                return decodeObjectText(responseData);
             } catch (error) {
                 console.error('API call error:', error);
                 throw error;
@@ -294,7 +777,9 @@
 
         function showStatus(elementId, message, isError = false) {
             const element = document.getElementById(elementId);
-            element.innerHTML = `<div class="${isError ? 'error-box' : 'status-box'}">${message}</div>`;
+            // メッセージもUnicodeデコードを適用
+            const decodedMessage = decodeUnicodeText(message);
+            element.innerHTML = `<div class="${isError ? 'error-box' : 'status-box'}">${decodedMessage}</div>`;
         }
 
         function updateSessionInfo() {
@@ -306,6 +791,200 @@
                 sessionInfo.style.display = 'block';
             } else {
                 sessionInfo.style.display = 'none';
+            }
+        }
+
+        function filterTasks() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const agentFilter = document.getElementById('agentFilter').value;
+            
+            let filteredTasks = allTasks;
+            
+            if (statusFilter) {
+                filteredTasks = filteredTasks.filter(task => task.status === statusFilter);
+            }
+            
+            if (agentFilter) {
+                filteredTasks = filteredTasks.filter(task => task.agent === agentFilter);
+            }
+            
+            displayTaskList(filteredTasks);
+        }
+
+        function displayTaskList(tasks) {
+            const taskList = document.getElementById('taskList');
+            
+            if (!tasks || tasks.length === 0) {
+                taskList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-text">タスクがありません</div>
+                        <div class="empty-state-subtext">新しいセッションを作成してください</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            tasks.forEach(task => {
+                const isActive = task.id === selectedTaskId ? 'active' : '';
+                const statusClass = `status-${task.status}`;
+                
+                html += `
+                    <div class="task-item ${isActive}" onclick="selectTask('${task.id}')">
+                        <div class="task-header">
+                            <div class="task-title">${decodeUnicodeText(task.task)}</div>
+                            <div class="task-status ${statusClass}">${decodeUnicodeText(task.status)}</div>
+                        </div>
+                        <div class="task-meta">
+                            <span class="task-agent">${/^[a-zA-Z_]+$/.test(task.agent) ? task.agent : decodeUnicodeText(task.agent)}</span>
+                            <span class="task-time">${task.updated_at || 'N/A'}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            taskList.innerHTML = html;
+        }
+
+        function selectTask(taskId) {
+            selectedTaskId = taskId;
+            const task = allTasks.find(t => t.id === taskId);
+            
+            if (task) {
+                displayTaskDetails(task);
+                displayTaskList(allTasks); // Re-render to show active state
+            }
+        }
+
+        function displayTaskDetails(task) {
+            const contentTitle = document.getElementById('contentTitle');
+            const contentBody = document.getElementById('contentBody');
+            
+            contentTitle.textContent = decodeUnicodeText(task.task);
+            
+            let html = `
+                <div class="section">
+                    <h2>📋 タスク詳細</h2>
+                    <div class="form-group">
+                        <label>タスクID:</label>
+                        <div>${task.id}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>タスク名:</label>
+                        <div>${decodeUnicodeText(task.task)}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>エージェント:</label>
+                        <div>${/^[a-zA-Z_]+$/.test(task.agent) ? task.agent : decodeUnicodeText(task.agent)}</div>
+                    </div>
+                    <div class="form-group">
+                        <label>ステータス:</label>
+                        <div class="task-status status-${task.status}">${decodeUnicodeText(task.status)}</div>
+                    </div>
+                    ${task.tags && task.tags.length > 0 ? `
+                        <div class="form-group">
+                            <label>タグ:</label>
+                            <div>${task.tags.map(tag => decodeUnicodeText(tag)).join(', ')}</div>
+                        </div>
+                    ` : ''}
+                    ${task.need && task.need.length > 0 ? `
+                        <div class="form-group">
+                            <label>依存関係:</label>
+                            <div>${task.need.map(dep => decodeUnicodeText(dep)).join(', ')}</div>
+                        </div>
+                    ` : ''}
+                    ${task.result ? `
+                        <div class="form-group">
+                            <label>実行結果:</label>
+                            <div class="result-content">${decodeUnicodeText(task.result)}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            // Add flow diagram section
+            html += `
+                <div class="section">
+                    <h2>📊 タスクフロー</h2>
+                    <div id="flowDiagram" class="flow-diagram">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔄</div>
+                            <div class="empty-state-text">フロー図はタスク作成後に表示されます</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            contentBody.innerHTML = html;
+        }
+
+        function updateAgentFilter() {
+            const agentFilter = document.getElementById('agentFilter');
+            const currentValue = agentFilter.value;
+            
+            // Get unique agents from all tasks
+            const uniqueAgents = [...new Set(allTasks.map(task => task.agent))];
+            
+            // Clear existing options except "すべて"
+            agentFilter.innerHTML = '<option value="">すべて</option>';
+            
+            // Add agent options
+            uniqueAgents.forEach(agent => {
+                const option = document.createElement('option');
+                option.value = agent;
+                option.textContent = agent;
+                agentFilter.appendChild(option);
+            });
+            
+            // Restore previous selection if still valid
+            if (currentValue && uniqueAgents.includes(currentValue)) {
+                agentFilter.value = currentValue;
+            }
+        }
+
+        function renderFlowDiagram() {
+            if (!allTasks || allTasks.length === 0) return;
+            
+            // Generate Mermaid diagram based on task dependencies
+            let mermaidCode = 'graph TD\n';
+            
+            allTasks.forEach(task => {
+                const nodeId = task.id.replace(/[^a-zA-Z0-9]/g, '_');
+                const decodedTask = decodeUnicodeText(task.task);
+                const label = decodedTask.substring(0, 30) + (decodedTask.length > 30 ? '...' : '');
+                
+                mermaidCode += `    ${nodeId}[${label}]\n`;
+                
+                // Add dependencies
+                if (task.need && task.need.length > 0) {
+                    task.need.forEach(dep => {
+                        const depId = dep.replace(/[^a-zA-Z0-9]/g, '_');
+                        mermaidCode += `    ${depId} --> ${nodeId}\n`;
+                    });
+                }
+                
+                // Add styling based on status
+                if (task.status === 'completed') {
+                    mermaidCode += `    ${nodeId}:::completed\n`;
+                } else if (task.status === 'in_progress') {
+                    mermaidCode += `    ${nodeId}:::inProgress\n`;
+                } else if (task.status === 'failed') {
+                    mermaidCode += `    ${nodeId}:::failed\n`;
+                }
+            });
+            
+            // Add style classes
+            mermaidCode += `
+                classDef completed fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+                classDef inProgress fill:#fef3c7,stroke:#d97706,stroke-width:2px
+                classDef failed fill:#fecaca,stroke:#dc2626,stroke-width:2px
+            `;
+            
+            const flowDiagram = document.getElementById('flowDiagram');
+            if (flowDiagram) {
+                flowDiagram.innerHTML = `<div class="mermaid">${mermaidCode}</div>`;
+                mermaid.init(undefined, flowDiagram.querySelector('.mermaid'));
             }
         }
 
@@ -402,26 +1081,32 @@
         }
 
         function displayTaskStatus(statusData) {
-            const taskList = document.getElementById('taskList');
+            const taskProgress = document.getElementById('taskProgress');
             
             if (!statusData.task_data) {
-                taskList.innerHTML = '<div class="status-box">タスクデータがありません</div>';
+                taskProgress.innerHTML = '<div class="status-box">タスクデータがありません</div>';
                 return;
             }
             
-            let html = '<h3>📊 タスクステータス</h3>';
-            
-            // 実行進捗の可視化
-            html += '<div class="progress-section">';
-            html += '<h4>🔄 実行進捗</h4>';
-            
-            const allTasks = [];
+            // Update global tasks array
+            allTasks = [];
             if (statusData.task_data.daily_tasks) {
                 allTasks.push(...statusData.task_data.daily_tasks);
             }
             if (statusData.task_data.info_references) {
                 allTasks.push(...statusData.task_data.info_references);
             }
+            
+            // Update task list in sidebar
+            displayTaskList(allTasks);
+            updateAgentFilter();
+            
+            // Update progress in main content
+            let html = '<h3>📊 タスクステータス</h3>';
+            
+            // 実行進捗の可視化
+            html += '<div class="progress-section">';
+            html += '<h4>🔄 実行進捗</h4>';
             
             const statusCounts = { pending: 0, in_progress: 0, completed: 0, failed: 0 };
             allTasks.forEach(task => {
@@ -438,53 +1123,31 @@
                         <div class="progress-segment status-failed" style="width: ${(statusCounts.failed / totalTasks) * 100}%"></div>
                     </div>
                     <div class="progress-legend">
-                        <span class="legend-item">✅ 完了: ${statusCounts.completed}</span>
-                        <span class="legend-item">⏳ 実行中: ${statusCounts.in_progress}</span>
-                        <span class="legend-item">⏸️ 待機中: ${statusCounts.pending}</span>
-                        <span class="legend-item">❌ 失敗: ${statusCounts.failed}</span>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #dcfce7"></div>
+                            完了: ${statusCounts.completed}
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #fef3c7"></div>
+                            実行中: ${statusCounts.in_progress}
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #f1f5f9"></div>
+                            待機中: ${statusCounts.pending}
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #fecaca"></div>
+                            失敗: ${statusCounts.failed}
+                        </div>
                     </div>
                 `;
             }
             html += '</div>';
             
-            // 日次タスク
-            if (statusData.task_data.daily_tasks && statusData.task_data.daily_tasks.length > 0) {
-                html += '<h4>📅 日次タスク</h4>';
-                statusData.task_data.daily_tasks.forEach(task => {
-                    html += `
-                        <div class="task-item">
-                            <strong>ID:</strong> ${task.id}<br>
-                            <strong>タスク:</strong> ${task.task}<br>
-                            <strong>エージェント:</strong> ${task.agent}<br>
-                            <strong>ステータス:</strong> <span class="task-status status-${task.status}">${task.status}</span><br>
-                            <strong>タグ:</strong> ${task.tags ? task.tags.join(', ') : 'なし'}<br>
-                            ${task.need && task.need.length > 0 ? `<strong>依存関係:</strong> ${task.need.join(', ')}<br>` : ''}
-                            ${task.result ? `<strong>結果:</strong> <div class="result-content">${task.result}</div>` : ''}
-                        </div>
-                    `;
-                });
-            }
+            taskProgress.innerHTML = html;
             
-            // 情報参照タスク
-            if (statusData.task_data.info_references && statusData.task_data.info_references.length > 0) {
-                html += '<h4>📚 情報参照タスク</h4>';
-                statusData.task_data.info_references.forEach(task => {
-                    html += `
-                        <div class="task-item">
-                            <strong>ID:</strong> ${task.id}<br>
-                            <strong>タスク:</strong> ${task.task}<br>
-                            <strong>エージェント:</strong> ${task.agent}<br>
-                            <strong>ステータス:</strong> <span class="task-status status-${task.status}">${task.status}</span><br>
-                            <strong>参照タイプ:</strong> ${task.reference_type}<br>
-                            <strong>タグ:</strong> ${task.tags ? task.tags.join(', ') : 'なし'}<br>
-                            ${task.need && task.need.length > 0 ? `<strong>依存関係:</strong> ${task.need.join(', ')}<br>` : ''}
-                            ${task.result ? `<strong>結果:</strong> <div class="result-content">${task.result}</div>` : ''}
-                        </div>
-                    `;
-                });
-            }
-            
-            taskList.innerHTML = html;
+            // Render flow diagram
+            renderFlowDiagram();
         }
 
         async function getAvailableAgents() {
