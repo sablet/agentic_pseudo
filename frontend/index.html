@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic Task Management System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: #fafafa;
+        }
+        
+        .section h2 {
+            color: #555;
+            margin-top: 0;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        input, textarea, button, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .status-box {
+            background-color: #e9f7ef;
+            border: 1px solid #d4edda;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .error-box {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+            color: #721c24;
+        }
+        
+        .session-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .task-item {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .task-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-in_progress { background-color: #cce5ff; color: #004085; }
+        .status-completed { background-color: #d4edda; color: #155724; }
+        .status-failed { background-color: #f8d7da; color: #721c24; }
+        
+        .agents-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .agent-card {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+        }
+        
+        .agent-card h4 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        
+        .progress-section {
+            margin-bottom: 20px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .progress-segment {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-legend {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            font-size: 12px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .result-content {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 5px;
+            border-left: 4px solid #007bff;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Agentic Task Management System</h1>
+        
+        <div id="sessionInfo" class="session-info" style="display: none;">
+            セッションID: <span id="currentSessionId"></span>
+        </div>
+        
+        <div class="section">
+            <h2>📋 セッション管理</h2>
+            <button onclick="createSession()">新しいセッションを作成</button>
+            <div id="sessionStatus"></div>
+        </div>
+        
+        <div class="section">
+            <h2>🎯 ヒアリング結果登録</h2>
+            <div class="form-group">
+                <label for="useCaseSelect">サンプルユースケース選択:</label>
+                <select id="useCaseSelect" onchange="loadUseCase()">
+                    <option value="">-- カスタム入力 --</option>
+                    <option value="market_research">市場調査レポート作成</option>
+                    <option value="data_analysis">データ分析レポート作成</option>
+                    <option value="project_management">複合的プロジェクト管理</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="hearingResult">ヒアリング結果:</label>
+                <textarea id="hearingResult" placeholder="ユーザーの要望や詳細を入力してください..."></textarea>
+            </div>
+            <button onclick="saveHearing()">ヒアリング結果を保存</button>
+            <div id="hearingStatus"></div>
+        </div>
+        
+        <div class="section">
+            <h2>📝 タスクプラン作成</h2>
+            <div class="form-group">
+                <label for="userInstruction">ユーザー指示:</label>
+                <textarea id="userInstruction" placeholder="実行したいタスクの内容を入力してください..."></textarea>
+            </div>
+            <button onclick="createTaskPlan()">タスクプランを作成</button>
+            <div id="planStatus"></div>
+        </div>
+        
+        <div class="section">
+            <h2>⚡ タスク実行・監視</h2>
+            <button onclick="executeTaskPlan()">タスクプランを実行</button>
+            <button onclick="getTaskStatus()">ステータスを更新</button>
+            <div id="executionStatus"></div>
+            <div id="taskList"></div>
+        </div>
+        
+        <div class="section">
+            <h2>🔧 利用可能なエージェント</h2>
+            <button onclick="getAvailableAgents()">エージェント一覧を取得</button>
+            <div id="agentsList"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000';
+        let currentSessionId = null;
+
+        async function apiCall(endpoint, method = 'GET', data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API call error:', error);
+                throw error;
+            }
+        }
+
+        function showStatus(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${isError ? 'error-box' : 'status-box'}">${message}</div>`;
+        }
+
+        function updateSessionInfo() {
+            const sessionInfo = document.getElementById('sessionInfo');
+            const sessionIdSpan = document.getElementById('currentSessionId');
+            
+            if (currentSessionId) {
+                sessionIdSpan.textContent = currentSessionId;
+                sessionInfo.style.display = 'block';
+            } else {
+                sessionInfo.style.display = 'none';
+            }
+        }
+
+        async function createSession() {
+            try {
+                const result = await apiCall('/api/sessions', 'POST');
+                currentSessionId = result.session_id;
+                updateSessionInfo();
+                showStatus('sessionStatus', `セッションを作成しました: ${currentSessionId}`);
+            } catch (error) {
+                showStatus('sessionStatus', `セッション作成エラー: ${error.message}`, true);
+            }
+        }
+
+        async function saveHearing() {
+            if (!currentSessionId) {
+                showStatus('hearingStatus', 'まずセッションを作成してください', true);
+                return;
+            }
+            
+            const hearingResult = document.getElementById('hearingResult').value;
+            if (!hearingResult.trim()) {
+                showStatus('hearingStatus', 'ヒアリング結果を入力してください', true);
+                return;
+            }
+            
+            try {
+                const result = await apiCall('/api/hearing', 'POST', {
+                    session_id: currentSessionId,
+                    hearing_result: hearingResult
+                });
+                showStatus('hearingStatus', result.message);
+            } catch (error) {
+                showStatus('hearingStatus', `ヒアリング保存エラー: ${error.message}`, true);
+            }
+        }
+
+        async function createTaskPlan() {
+            if (!currentSessionId) {
+                showStatus('planStatus', 'まずセッションを作成してください', true);
+                return;
+            }
+            
+            const userInstruction = document.getElementById('userInstruction').value;
+            if (!userInstruction.trim()) {
+                showStatus('planStatus', 'ユーザー指示を入力してください', true);
+                return;
+            }
+            
+            try {
+                const result = await apiCall('/api/tasks/create', 'POST', {
+                    user_instruction: userInstruction,
+                    session_id: currentSessionId
+                });
+                showStatus('planStatus', result.message);
+                
+                // タスクステータスを自動更新
+                await getTaskStatus();
+            } catch (error) {
+                showStatus('planStatus', `タスクプラン作成エラー: ${error.message}`, true);
+            }
+        }
+
+        async function executeTaskPlan() {
+            if (!currentSessionId) {
+                showStatus('executionStatus', 'まずセッションを作成してください', true);
+                return;
+            }
+            
+            try {
+                const result = await apiCall(`/api/tasks/execute/${currentSessionId}`, 'POST');
+                showStatus('executionStatus', result.message);
+                
+                // 実行後のステータスを自動更新開始
+                startStatusUpdates();
+                setTimeout(() => getTaskStatus(), 1000);
+            } catch (error) {
+                showStatus('executionStatus', `タスク実行エラー: ${error.message}`, true);
+            }
+        }
+
+        async function getTaskStatus() {
+            if (!currentSessionId) {
+                showStatus('taskList', 'まずセッションを作成してください', true);
+                return;
+            }
+            
+            try {
+                const result = await apiCall(`/api/tasks/status/${currentSessionId}`);
+                displayTaskStatus(result);
+            } catch (error) {
+                showStatus('taskList', `ステータス取得エラー: ${error.message}`, true);
+            }
+        }
+
+        function displayTaskStatus(statusData) {
+            const taskList = document.getElementById('taskList');
+            
+            if (!statusData.task_data) {
+                taskList.innerHTML = '<div class="status-box">タスクデータがありません</div>';
+                return;
+            }
+            
+            let html = '<h3>📊 タスクステータス</h3>';
+            
+            // 実行進捗の可視化
+            html += '<div class="progress-section">';
+            html += '<h4>🔄 実行進捗</h4>';
+            
+            const allTasks = [];
+            if (statusData.task_data.daily_tasks) {
+                allTasks.push(...statusData.task_data.daily_tasks);
+            }
+            if (statusData.task_data.info_references) {
+                allTasks.push(...statusData.task_data.info_references);
+            }
+            
+            const statusCounts = { pending: 0, in_progress: 0, completed: 0, failed: 0 };
+            allTasks.forEach(task => {
+                statusCounts[task.status] = (statusCounts[task.status] || 0) + 1;
+            });
+            
+            const totalTasks = allTasks.length;
+            if (totalTasks > 0) {
+                html += `
+                    <div class="progress-bar">
+                        <div class="progress-segment status-completed" style="width: ${(statusCounts.completed / totalTasks) * 100}%"></div>
+                        <div class="progress-segment status-in_progress" style="width: ${(statusCounts.in_progress / totalTasks) * 100}%"></div>
+                        <div class="progress-segment status-pending" style="width: ${(statusCounts.pending / totalTasks) * 100}%"></div>
+                        <div class="progress-segment status-failed" style="width: ${(statusCounts.failed / totalTasks) * 100}%"></div>
+                    </div>
+                    <div class="progress-legend">
+                        <span class="legend-item">✅ 完了: ${statusCounts.completed}</span>
+                        <span class="legend-item">⏳ 実行中: ${statusCounts.in_progress}</span>
+                        <span class="legend-item">⏸️ 待機中: ${statusCounts.pending}</span>
+                        <span class="legend-item">❌ 失敗: ${statusCounts.failed}</span>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            
+            // 日次タスク
+            if (statusData.task_data.daily_tasks && statusData.task_data.daily_tasks.length > 0) {
+                html += '<h4>📅 日次タスク</h4>';
+                statusData.task_data.daily_tasks.forEach(task => {
+                    html += `
+                        <div class="task-item">
+                            <strong>ID:</strong> ${task.id}<br>
+                            <strong>タスク:</strong> ${task.task}<br>
+                            <strong>エージェント:</strong> ${task.agent}<br>
+                            <strong>ステータス:</strong> <span class="task-status status-${task.status}">${task.status}</span><br>
+                            <strong>タグ:</strong> ${task.tags ? task.tags.join(', ') : 'なし'}<br>
+                            ${task.need && task.need.length > 0 ? `<strong>依存関係:</strong> ${task.need.join(', ')}<br>` : ''}
+                            ${task.result ? `<strong>結果:</strong> <div class="result-content">${task.result}</div>` : ''}
+                        </div>
+                    `;
+                });
+            }
+            
+            // 情報参照タスク
+            if (statusData.task_data.info_references && statusData.task_data.info_references.length > 0) {
+                html += '<h4>📚 情報参照タスク</h4>';
+                statusData.task_data.info_references.forEach(task => {
+                    html += `
+                        <div class="task-item">
+                            <strong>ID:</strong> ${task.id}<br>
+                            <strong>タスク:</strong> ${task.task}<br>
+                            <strong>エージェント:</strong> ${task.agent}<br>
+                            <strong>ステータス:</strong> <span class="task-status status-${task.status}">${task.status}</span><br>
+                            <strong>参照タイプ:</strong> ${task.reference_type}<br>
+                            <strong>タグ:</strong> ${task.tags ? task.tags.join(', ') : 'なし'}<br>
+                            ${task.need && task.need.length > 0 ? `<strong>依存関係:</strong> ${task.need.join(', ')}<br>` : ''}
+                            ${task.result ? `<strong>結果:</strong> <div class="result-content">${task.result}</div>` : ''}
+                        </div>
+                    `;
+                });
+            }
+            
+            taskList.innerHTML = html;
+        }
+
+        async function getAvailableAgents() {
+            try {
+                const result = await apiCall('/api/agents');
+                displayAgents(result);
+            } catch (error) {
+                showStatus('agentsList', `エージェント取得エラー: ${error.message}`, true);
+            }
+        }
+
+        function displayAgents(agentsData) {
+            const agentsList = document.getElementById('agentsList');
+            
+            let html = '<div class="agents-list">';
+            
+            agentsData.agents.forEach(agentKey => {
+                const description = agentsData.descriptions[agentKey] || '説明なし';
+                html += `
+                    <div class="agent-card">
+                        <h4>${agentKey}</h4>
+                        <p>${description}</p>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            agentsList.innerHTML = html;
+        }
+
+        // ユースケースデータ
+        const useCaseData = {
+            market_research: {
+                hearing: `# ユーザー要望ヒアリング結果
+
+## 基本情報
+- 担当者: 企画部 田中様
+- プロジェクト: 生成AI事業参入検討
+- 期限: 2週間後
+- 用途: 経営会議での事業提案
+
+## 調査要件
+- **対象領域**: 生成AI技術（特にマルチモーダルAI）
+- **調査範囲**: 
+  - 技術動向（最新の研究開発状況）
+  - 市場動向（市場規模、成長予測）
+  - 競合他社分析（主要プレイヤー3-5社）
+  - 参入障壁と機会分析
+- **成果物**: 
+  - PowerPoint用のサマリー（10-15ページ）
+  - 詳細調査レポート（30-50ページ）
+  - データ表・グラフ集
+
+## 進捗管理要件
+- 週次進捗報告（毎週金曜日）
+- 中間チェックポイント（1週間後）
+- 最終レビュー（提出2日前）
+
+## 参考情報
+- 過去に実施した類似調査: AIチャットボット市場調査（2023年）
+- 参考にしたい報告書: McKinsey AI Report 2024
+- 予算制約: 外部調査会社への委託は不可`,
+                instruction: "生成AI技術、特にマルチモーダルAIの市場調査レポートを作成したい。技術動向、市場規模、競合他社分析を含む包括的な調査をお願いします。まずは必要な情報収集から始めてください。"
+            },
+            data_analysis: {
+                hearing: `# データ分析プロジェクト要件
+
+## プロジェクト概要
+- 目的: Q4売上予測モデルの構築と精度検証
+- データ期間: 過去3年間の月次売上データ
+- 予測対象: 今四半期（Q4）の月次売上
+
+## 技術要件
+- **データ処理**: Python/pandas使用
+- **モデリング**: 時系列分析（ARIMA、Prophet）
+- **可視化**: matplotlib、seaborn使用
+- **精度指標**: RMSE、MAPE、MAE
+
+## 成果物要件
+- データ前処理コード
+- 探索的データ分析（EDA）
+- モデル構築・評価コード  
+- 予測結果の可視化
+- 技術レポート（手法説明・結果考察）
+- 経営層向けサマリー
+
+## データファイル
+- sales_data.csv: 月次売上データ
+- customer_segments.csv: 顧客セグメント情報
+- marketing_spend.csv: マーケティング投資データ`,
+                instruction: "営業データの時系列分析を行い、Q4売上予測モデルを構築したい。データ処理から予測、レポート作成まで一貫して対応してください。まずはデータの前処理と探索的分析から始めてください。"
+            },
+            project_management: {
+                hearing: `# Webサービス開発プロジェクト
+
+## サービス概要
+- サービス名: TaskFlow（仮称）
+- 概要: チーム向けタスク管理・進捗可視化サービス
+- ターゲット: 中小企業の開発チーム（10-50名）
+
+## フェーズ1要件（企画・調査）
+- 市場調査（競合サービス分析）
+- 技術選定調査（フロントエンド・バックエンド）
+- UI/UXリサーチ
+- ビジネスモデル検討
+
+## フェーズ2要件（設計・開発）
+- システム設計書作成
+- API設計
+- フロントエンド開発
+- バックエンド開発
+- データベース設計
+
+## 制約・要件
+- 開発期間: 6ヶ月
+- チーム規模: 5名（企画1名、デザイナー1名、エンジニア3名）
+- 予算制約: インフラコストを月10万円以内に抑制
+- 技術制約: React、Node.js、PostgreSQL使用`,
+                instruction: "新規Webサービス『TaskFlow』の開発プロジェクトを開始したい。まずは企画フェーズから始めて、段階的に計画を立ててください。市場調査と技術選定から始めてもらえますか？"
+            }
+        };
+        
+        function loadUseCase() {
+            const select = document.getElementById('useCaseSelect');
+            const hearingTextarea = document.getElementById('hearingResult');
+            const instructionTextarea = document.getElementById('userInstruction');
+            
+            const selectedCase = select.value;
+            if (selectedCase && useCaseData[selectedCase]) {
+                hearingTextarea.value = useCaseData[selectedCase].hearing;
+                instructionTextarea.value = useCaseData[selectedCase].instruction;
+            } else {
+                hearingTextarea.value = '';
+                instructionTextarea.value = '';
+            }
+        }
+        
+        // 自動ステータス更新
+        let statusUpdateInterval;
+        
+        function startStatusUpdates() {
+            if (statusUpdateInterval) {
+                clearInterval(statusUpdateInterval);
+            }
+            statusUpdateInterval = setInterval(() => {
+                if (currentSessionId) {
+                    getTaskStatus();
+                }
+            }, 3000); // 3秒ごとに更新
+        }
+        
+        function stopStatusUpdates() {
+            if (statusUpdateInterval) {
+                clearInterval(statusUpdateInterval);
+                statusUpdateInterval = null;
+            }
+        }
+        
+        // ページ読み込み時に利用可能なエージェントを取得
+        window.addEventListener('load', () => {
+            getAvailableAgents();
+        });
+        
+        // ページを離れるときにステータス更新を停止
+        window.addEventListener('beforeunload', () => {
+            stopStatusUpdates();
+        });
+    </script>
+</body>
+</html>
