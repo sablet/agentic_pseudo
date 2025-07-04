@@ -4,6 +4,251 @@
 
 Frontend-v2 コンポーネントの分析に基づいて、エージェント通信システムに必要なバックエンドAPIを整理し、データスキーマを定義します。
 
+## API関連性ダイアグラム
+
+### 1. APIエンドポイント関係図（フローチャート）
+
+```mermaid
+flowchart TD
+    A[Client] --> B["GET /api/agents"]
+    A --> C["GET /api/chat/sessions"]
+    
+    B --> D["POST /api/agents"]
+    D --> E[Agent Created]
+    E --> F["POST /api/notifications"]
+    
+    C --> G["GET /api/chat/sessions/{agent_id}/messages"]
+    G --> H["POST /api/chat/sessions/{agent_id}/messages"]
+    
+    H --> I{Contains agent_proposal?}
+    I -->|Yes| J["POST /api/agents/proposals/{id}/approve"]
+    I -->|No| K[Normal Message]
+    
+    J --> D
+    
+    E --> L["POST /api/agents/{agent_id}/execute"]
+    L --> M["PUT /api/agents/{agent_id}/status"]
+    
+    M --> N[WebSocket Notification]
+    N --> O["WebSocket Connection"]
+    
+    style E fill:#e1f5fe
+    style F fill:#f3e5f5
+    style N fill:#e8f5e8
+```
+
+### 2. データフロー図（状態遷移）
+
+```mermaid
+stateDiagram-v2
+    [*] --> AgentDiscovery
+    AgentDiscovery --> AgentCreation : POST agents
+    AgentCreation --> AgentPending : status pending
+    
+    AgentPending --> AgentExecuting : POST execute
+    AgentExecuting --> AgentCompleted : PUT status
+    AgentExecuting --> AgentFailed : PUT status
+    
+    AgentCompleted --> [*]
+    AgentFailed --> AgentPending : Retry
+    
+    state ChatFlow {
+        [*] --> GetSessions
+        GetSessions --> GetMessages : GET messages
+        GetMessages --> SendMessage : POST messages
+        SendMessage --> ProposalCheck
+        ProposalCheck --> AgentProposal : Has proposal
+        ProposalCheck --> NormalMessage : No proposal
+        AgentProposal --> ApproveProposal : POST approve
+        ApproveProposal --> AgentCreation
+    }
+    
+    state NotificationFlow {
+        [*] --> CreateNotification
+        CreateNotification --> SendNotification : POST notifications
+        SendNotification --> WebSocketBroadcast : WebSocket
+    }
+```
+
+### 3. システム相互作用図（シーケンス）
+
+```mermaid
+sequenceDiagram
+    participant U as User/Frontend
+    participant A as Agent API
+    participant C as Chat API
+    participant N as Notification API
+    participant W as WebSocket
+    
+    U->>A: GET /api/agents
+    A-->>U: Available agent templates
+    
+    U->>C: GET /api/chat/sessions
+    C-->>U: Session list
+    
+    U->>C: POST /api/chat/sessions/main/messages
+    Note over C: User sends message
+    C-->>U: Message with agent_proposal
+    
+    U->>A: POST /api/agents/proposals/{id}/approve
+    A->>A: Create new agent
+    A-->>U: Agent created
+    
+    A->>N: POST /api/notifications
+    N->>W: Broadcast agent_created
+    W-->>U: Real-time update
+    
+    U->>A: POST /api/agents/{id}/execute
+    A->>A: Start execution
+    A->>W: Broadcast status update
+    W-->>U: Real-time status
+    
+    loop Execution Progress
+        A->>A: PUT /api/agents/{id}/status
+        A->>W: Broadcast progress
+        W-->>U: Status updates
+    end
+    
+    A->>C: POST /api/chat/sessions/{id}/messages
+    Note over C: Agent posts result
+    C->>W: Broadcast new message
+    W-->>U: New message notification
+```
+
+### 4. アーキテクチャ概要図（C4スタイル）
+
+```mermaid
+graph TB
+    subgraph Frontend["Frontend Layer"]
+        UI[React Components]
+        WS[WebSocket Client]
+    end
+    
+    subgraph Gateway["API Gateway"]
+        AG[API Gateway/Router]
+    end
+    
+    subgraph Backend["Backend Services"]
+        subgraph AgentMgmt["Agent Management"]
+            A1["GET agents"]
+            A2["POST agents"]
+            A3["GET agent by ID"]
+            A4["PUT agent status"]
+            A5["POST agent execute"]
+        end
+        
+        subgraph ChatMgmt["Chat Management"]
+            C1["GET sessions"]
+            C2["GET messages"]
+            C3["POST messages"]
+        end
+        
+        subgraph Proposal["Proposal System"]
+            P1["POST approve"]
+        end
+        
+        subgraph Notify["Notification System"]
+            N1["POST notifications"]
+            N2["WebSocket Server"]
+        end
+    end
+    
+    subgraph Data["Data Layer"]
+        DB[(Database)]
+        CACHE[(Cache/Session Store)]
+    end
+    
+    UI --> AG
+    WS --> N2
+    AG --> A1
+    AG --> A2
+    AG --> A3
+    AG --> A4
+    AG --> A5
+    AG --> C1
+    AG --> C2
+    AG --> C3
+    AG --> P1
+    AG --> N1
+    
+    A2 --> P1
+    A4 --> N2
+    P1 --> A2
+    N1 --> N2
+    
+    A1 --> DB
+    A2 --> DB
+    A3 --> DB
+    A4 --> DB
+    A5 --> DB
+    C1 --> DB
+    C2 --> DB
+    C3 --> DB
+    P1 --> DB
+    N1 --> CACHE
+    N2 --> CACHE
+    
+    style UI fill:#e3f2fd
+    style WS fill:#e8f5e8
+    style DB fill:#fff3e0
+    style CACHE fill:#fce4ec
+```
+
+### 5. データ関係図（ER図スタイル）
+
+```mermaid
+erDiagram
+    AGENT {
+        string agent_id PK
+        string parent_agent_id FK
+        string purpose
+        string context
+        string delegation_type
+        string status
+        json delegation_params
+        datetime created_at
+        datetime updated_at
+    }
+    
+    CHAT_SESSION {
+        string agent_id PK
+        string agent_name
+        int message_count
+        datetime last_message_at
+    }
+    
+    CHAT_MESSAGE {
+        string id PK
+        string role
+        string content
+        datetime timestamp
+        string agent_id FK
+        json agent_proposal
+    }
+    
+    AGENT_TEMPLATE {
+        string id PK
+        string name
+        string delegation_type
+        string description
+        string default_context
+        json parameters
+    }
+    
+    NOTIFICATION {
+        string id PK
+        string content
+        string target_session
+        string type
+        datetime timestamp
+    }
+    
+    AGENT ||--o{ AGENT : "parent-child"
+    CHAT_SESSION ||--o{ CHAT_MESSAGE : "contains"
+    AGENT ||--|| CHAT_SESSION : "has"
+    AGENT_TEMPLATE ||--o{ AGENT : "creates"
+```
+
 ## 必要なAPIエンドポイント
 
 ### 1. エージェント管理
