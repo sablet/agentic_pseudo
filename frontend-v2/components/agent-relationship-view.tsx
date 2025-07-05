@@ -32,13 +32,13 @@ export function AgentRelationshipView({ agents }: AgentRelationshipViewProps) {
 
   const getNodeColor = (status: AgentInfo["status"]) => {
     switch (status) {
-      case "pending":
-        return "#fbbf24" // yellow
-      case "in_progress":
+      case "todo":
         return "#3b82f6" // blue
-      case "completed":
+      case "doing":
         return "#10b981" // green
-      case "failed":
+      case "waiting":
+        return "#fbbf24" // yellow
+      case "needs_input":
         return "#ef4444" // red
       default:
         return "#6b7280" // gray
@@ -138,20 +138,20 @@ export function AgentRelationshipView({ agents }: AgentRelationshipViewProps) {
         {/* ステータス凡例 */}
         <div className="flex flex-wrap gap-4 mt-4 text-xs">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-yellow-400"></div>
+            <div className="w-3 h-3 rounded bg-blue-500"></div>
             <span>実行待ち</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-blue-500"></div>
+            <div className="w-3 h-3 rounded bg-green-500"></div>
             <span>実行中</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-green-500"></div>
-            <span>完了</span>
+            <div className="w-3 h-3 rounded bg-yellow-400"></div>
+            <span>待機中</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded bg-red-500"></div>
-            <span>失敗</span>
+            <span>入力待ち</span>
           </div>
         </div>
       </CardContent>

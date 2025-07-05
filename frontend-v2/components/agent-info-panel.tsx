@@ -3,7 +3,6 @@
 import React from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
@@ -153,7 +152,6 @@ export function AgentInfoPanel({
         
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <Progress value={agentInfo.progress_percentage} className="flex-1 mr-3" />
             <Badge className={`text-xs ${
               agentInfo.level === 0 ? "bg-purple-100 text-purple-800" :
               agentInfo.level === 1 ? "bg-blue-100 text-blue-800" :
@@ -163,9 +161,6 @@ export function AgentInfoPanel({
               Level {agentInfo.level}
             </Badge>
           </div>
-          <p className="text-xs text-slate-500">
-            進捗: {agentInfo.progress_percentage}%
-          </p>
         </div>
       </div>
 
@@ -329,8 +324,9 @@ export function AgentInfoPanel({
                           <Badge className={`text-xs ${
                             agentInfo.parent_agent_summary.status === "todo" ? "bg-blue-100 text-blue-800" :
                             agentInfo.parent_agent_summary.status === "doing" ? "bg-green-100 text-green-800" :
-                            agentInfo.parent_agent_summary.status === "blocked" ? "bg-red-100 text-red-800" :
-                            "bg-yellow-100 text-yellow-800"
+                            agentInfo.parent_agent_summary.status === "waiting" ? "bg-yellow-100 text-yellow-800" :
+                            agentInfo.parent_agent_summary.status === "needs_input" ? "bg-red-100 text-red-800" :
+                            "bg-gray-100 text-gray-800"
                           }`}>
                             {agentInfo.parent_agent_summary.status}
                           </Badge>
@@ -366,8 +362,9 @@ export function AgentInfoPanel({
                               <Badge className={`text-xs ${
                                 child.status === "todo" ? "bg-blue-100 text-blue-800" :
                                 child.status === "doing" ? "bg-green-100 text-green-800" :
-                                child.status === "blocked" ? "bg-red-100 text-red-800" :
-                                "bg-yellow-100 text-yellow-800"
+                                child.status === "waiting" ? "bg-yellow-100 text-yellow-800" :
+                                child.status === "needs_input" ? "bg-red-100 text-red-800" :
+                                "bg-gray-100 text-gray-800"
                               }`}>
                                 {child.status}
                               </Badge>

@@ -241,6 +241,189 @@ tailwind.config.js              # Tailwind CSS + shadcn/ui
 - コスト最適化選択
 - ローカルモデル対応
 
+## フロントエンド開発・デバッグ手順
+
+### 開発サーバー起動・管理
+
+#### 基本起動
+```bash
+# 開発サーバー起動
+npm run dev
+
+# 通常はport 3000で起動
+# ▲ Next.js 15.2.4
+# - Local:        http://localhost:3000
+# - Network:      http://192.168.11.4:3000
+```
+
+#### ポート使用状況確認・管理
+```bash
+# port 3000の使用状況確認
+lsof -i :3000
+
+# 使用中プロセスの詳細確認
+ps aux | grep node
+
+# port 3000を使用中のプロセスを強制終了
+kill -9 $(lsof -t -i:3000)
+
+# または特定のPIDで終了
+kill -9 <PID>
+
+# バックグラウンド実行の場合
+npm run dev &  # バックグラウンドで起動
+jobs           # 実行中ジョブ一覧
+fg %1          # フォアグラウンドに戻す
+```
+
+#### 代替ポート使用
+```bash
+# port 3000が使用中の場合、自動的に3001が使用される
+# ⚠ Port 3000 is in use, trying 3001 instead.
+# - Local:        http://localhost:3001
+```
+
+### TypeScript型チェック・ビルド確認
+
+#### 型チェック
+```bash
+# 型エラーのみチェック（ビルドなし）
+npx tsc --noEmit
+
+# 成功例:
+# （何も出力されない = エラーなし）
+
+# エラー例:
+# components/agent-list.tsx(124,24): error TS2339: Property 'delegation_type' does not exist
+```
+
+#### ビルド確認
+```bash
+# 本番ビルド実行
+npm run build
+
+# 成功例:
+# ✓ Compiled successfully
+# Route (app)                              Size     First Load JS
+# ┌ ○ /                                    5.02 kB        87.8 kB
+
+# エラー例:
+# ⨯ Failed to compile
+# ./components/agent-list.tsx:124:24
+# Type error: Property 'delegation_type' does not exist
+```
+
+### Playwright デバッグ・E2Eテスト
+
+#### UI モードでのデバッグ
+```bash
+# Playwright UI起動（推奨）
+npx playwright test --ui
+
+# ブラウザで GUI テストランナーが開く
+# - テストケースの可視化
+# - ステップバイステップ実行
+# - DOM インスペクション
+```
+
+#### ヘッドレスモード実行
+```bash
+# 全テスト実行
+npx playwright test
+
+# 特定テストファイル実行
+npx playwright test tests/agent-creation.spec.ts
+
+# デバッグモード実行
+npx playwright test --debug
+```
+
+#### ブラウザ手動テスト
+```bash
+# 開発サーバー起動状態で
+# http://localhost:3000 （または3001）をブラウザで開く
+
+# 主要テスト項目:
+# 1. エージェント一覧表示
+# 2. 新規作成ボタン → テンプレート作成ダイアログ
+# 3. エージェント選択 → 詳細パネル表示
+# 4. DataUnitSelector の動作確認
+# 5. ステータス別グループ表示
+```
+
+### 開発環境トラブルシューティング
+
+#### よくある問題と解決法
+
+**1. ポートがすでに使用中**
+```bash
+# 問題: Error: listen EADDRINUSE: address already in use :::3000
+# 解決: 使用中プロセスを終了
+kill -9 $(lsof -t -i:3000)
+npm run dev
+```
+
+**2. TypeScript型エラー**
+```bash
+# 問題: Property 'xxx' does not exist on type 'yyy'
+# 解決: 型定義を確認・修正
+npx tsc --noEmit  # エラー詳細確認
+# types/agent.ts で型定義を修正
+```
+
+**3. Next.js キャッシュ問題**
+```bash
+# 問題: 変更が反映されない
+# 解決: キャッシュクリア
+rm -rf .next
+npm run dev
+```
+
+**4. Node.js プロセス残存**
+```bash
+# 問題: 前回のプロセスが残っている
+# 解決: 全Node.jsプロセス確認・終了
+ps aux | grep node
+kill -9 <残存PID>
+```
+
+#### 開発フロー推奨手順
+```bash
+# 1. 作業開始時
+cd frontend-v2
+npm run dev    # 開発サーバー起動
+
+# 2. コード変更後
+npx tsc --noEmit  # 型チェック
+
+# 3. 動作確認
+# ブラウザで http://localhost:3000 確認
+
+# 4. 重要な変更後
+npm run build     # ビルド確認
+npx playwright test --ui  # E2Eテスト
+
+# 5. 作業終了時
+Ctrl+C  # 開発サーバー停止
+```
+
+### パフォーマンス監視
+
+#### 開発時監視項目
+- **起動時間**: `Ready in xxxms` 
+- **Hot Reload**: ファイル変更→反映速度
+- **型チェック**: エラー表示の速度
+- **ビルド時間**: `npm run build` の実行時間
+
+#### ブラウザ開発者ツール活用
+```bash
+# Chrome DevTools (F12)
+# - Console: JavaScriptエラー確認
+# - Network: API通信確認  
+# - Performance: レンダリング速度
+# - React DevTools: コンポーネント状態確認
+```
+
 ## 結論
 
 エージェント中心UIシステムへの変換が完了。DataUnitシステムによるエージェント間データフロー、実行エンジン選択、階層管理機能を含む完全なエージェント管理システムを実装。

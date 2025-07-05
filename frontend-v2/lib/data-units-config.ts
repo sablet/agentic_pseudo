@@ -1,22 +1,22 @@
 "use client"
 
-import type { DataUnit } from "@/types/agent"
+import type { DataUnitCategory } from "@/types/agent"
 
 export interface DataUnitConfig {
-  value: DataUnit
+  value: DataUnitCategory
   label: string
   category: string
   editable?: boolean
 }
 
-export interface DataUnitCategory {
+export interface DataUnitCategoryInfo {
   id: string
   name: string
   editable?: boolean
 }
 
 // Predefined categories
-export const DEFAULT_CATEGORIES: DataUnitCategory[] = [
+export const DEFAULT_CATEGORIES: DataUnitCategoryInfo[] = [
   { id: "reports", name: "レポート・分析", editable: false },
   { id: "technical", name: "技術文書", editable: false },
   { id: "data", name: "データ・調査", editable: false },
@@ -59,7 +59,7 @@ const CATEGORIES_STORAGE_KEY = "custom-categories"
 export class DataUnitManager {
   private static instance: DataUnitManager
   private customDataUnits: DataUnitConfig[] = []
-  private customCategories: DataUnitCategory[] = []
+  private customCategories: DataUnitCategoryInfo[] = []
 
   private constructor() {
     this.loadFromStorage()
@@ -105,7 +105,7 @@ export class DataUnitManager {
     return [...DEFAULT_DATA_UNITS, ...this.customDataUnits]
   }
 
-  getAllCategories(): DataUnitCategory[] {
+  getAllCategories(): DataUnitCategoryInfo[] {
     return [...DEFAULT_CATEGORIES, ...this.customCategories]
   }
 
@@ -119,7 +119,7 @@ export class DataUnitManager {
     this.saveToStorage()
   }
 
-  updateDataUnit(oldValue: DataUnit, newUnit: DataUnitConfig): void {
+  updateDataUnit(oldValue: DataUnitCategory, newUnit: DataUnitConfig): void {
     // Update in custom data units
     const customIndex = this.customDataUnits.findIndex(unit => unit.value === oldValue)
     if (customIndex !== -1) {
@@ -136,18 +136,18 @@ export class DataUnitManager {
     }
   }
 
-  deleteDataUnit(value: DataUnit): void {
+  deleteDataUnit(value: DataUnitCategory): void {
     this.customDataUnits = this.customDataUnits.filter(unit => unit.value !== value)
     this.saveToStorage()
   }
 
-  addCategory(category: Omit<DataUnitCategory, "editable">): void {
-    const newCategory: DataUnitCategory = { ...category, editable: true }
+  addCategory(category: Omit<DataUnitCategoryInfo, "editable">): void {
+    const newCategory: DataUnitCategoryInfo = { ...category, editable: true }
     this.customCategories.push(newCategory)
     this.saveToStorage()
   }
 
-  updateCategory(oldId: string, newCategory: DataUnitCategory): void {
+  updateCategory(oldId: string, newCategory: DataUnitCategoryInfo): void {
     const index = this.customCategories.findIndex(cat => cat.id === oldId)
     if (index !== -1) {
       this.customCategories[index] = { ...newCategory, editable: true }
@@ -160,7 +160,7 @@ export class DataUnitManager {
     this.saveToStorage()
   }
 
-  getDataUnitConfig(value: DataUnit): DataUnitConfig | undefined {
+  getDataUnitConfig(value: DataUnitCategory): DataUnitConfig | undefined {
     return this.getAllDataUnits().find(unit => unit.value === value)
   }
 

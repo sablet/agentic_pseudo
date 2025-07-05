@@ -14,8 +14,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { toast } from "@/components/ui/use-toast"
 import { Plus, Edit2, Trash2, Download, Upload, Settings, X } from "lucide-react"
-import type { DataUnit } from "@/types/agent"
-import { dataUnitManager, type DataUnitConfig, type DataUnitCategory } from "@/lib/data-units-config"
+import type { DataUnit, DataUnitCategory } from "@/types/agent"
+import { dataUnitManager, type DataUnitConfig, type DataUnitCategoryInfo } from "@/lib/data-units-config"
 
 interface DataUnitManagerProps {
   onClose?: () => void
@@ -23,7 +23,7 @@ interface DataUnitManagerProps {
 
 export function DataUnitManager({ onClose }: DataUnitManagerProps) {
   const [dataUnits, setDataUnits] = useState<DataUnitConfig[]>([])
-  const [categories, setCategories] = useState<DataUnitCategory[]>([])
+  const [categories, setCategories] = useState<DataUnitCategoryInfo[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -37,7 +37,7 @@ export function DataUnitManager({ onClose }: DataUnitManagerProps) {
     label: "",
     category: "",
   })
-  const [newCategory, setNewCategory] = useState<Omit<DataUnitCategory, "editable">>({
+  const [newCategory, setNewCategory] = useState<Omit<DataUnitCategoryInfo, "editable">>({
     id: "",
     name: "",
   })

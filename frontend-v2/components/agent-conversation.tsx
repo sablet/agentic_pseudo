@@ -95,7 +95,7 @@ export function AgentConversation({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <CardTitle className="text-lg font-semibold text-slate-900">
-              {agent.delegation_type}
+              {agent.purpose}
             </CardTitle>
             <Badge variant="outline" className="text-xs">
               ID: {agent.agent_id.slice(-8)}

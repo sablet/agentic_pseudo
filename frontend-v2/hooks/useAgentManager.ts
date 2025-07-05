@@ -1,18 +1,107 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import type { AgentInfo, AgentMetaInfo, ContextStatus, DataUnit, ExecutionEngine } from "@/types/agent"
+import { useState, useCallback, useEffect } from "react"
+import type { AgentInfo, AgentMetaInfo, ContextStatus, DataUnitCategory, DataUnitValue, ExecutionEngine, AgentTemplate } from "@/types/agent"
 
 
-interface AgentTemplate {
-  delegation_type: string
-  purpose: DataUnit
-  context: DataUnit[]
-  execution_engine: ExecutionEngine
-  parameters: Record<string, any>
-}
+// AgentTemplate is now imported from types/agent.ts
 
 export function useAgentManager() {
+  // Create sample template data
+  const createSampleTemplates = (): AgentTemplate[] => {
+    const now = new Date()
+    
+    return [
+      {
+        template_id: "template_market_analysis",
+        name: "市場分析レポート作成テンプレート",
+        description: "特定業界の市場動向、競合状況、成長予測を含む包括的な市場分析レポートを作成します。新規事業参入や戦略策定に活用できます。",
+        delegation_type: "市場調査",
+        purpose_category: "market_analysis_report",
+        context_categories: ["technical_specifications", "financial_projections"],
+        execution_engine: "gemini-2.5-flash",
+        parameters: {
+          analysis_depth: "comprehensive",
+          timeline: "30日間",
+          output_format: "detailed_report"
+        },
+        created_at: new Date(now.getTime() - 86400000 * 7), // 7 days ago
+        updated_at: new Date(now.getTime() - 86400000 * 2), // 2 days ago
+        usage_count: 12
+      },
+      {
+        template_id: "template_competitor_analysis",
+        name: "競合分析比較表テンプレート",
+        description: "複数の競合他社の機能、価格、強み・弱みを体系的に比較分析する表を作成します。戦略立案や差別化ポイント発見に有効です。",
+        delegation_type: "競合分析",
+        purpose_category: "competitor_comparison_table",
+        context_categories: ["market_analysis_report", "technical_specifications"],
+        execution_engine: "claude-3.5-sonnet",
+        parameters: {
+          comparison_criteria: ["features", "pricing", "market_share"],
+          analysis_format: "matrix_table",
+          competitor_count: 5
+        },
+        created_at: new Date(now.getTime() - 86400000 * 5), // 5 days ago
+        updated_at: new Date(now.getTime() - 86400000 * 1), // 1 day ago
+        usage_count: 8
+      },
+      {
+        template_id: "template_customer_analysis",
+        name: "顧客セグメント分析テンプレート",
+        description: "ターゲット顧客を企業規模や業界別にセグメント化し、各セグメントのニーズや特性を詳細に分析します。",
+        delegation_type: "顧客分析",
+        purpose_category: "customer_segment_data",
+        context_categories: ["user_survey_results", "market_analysis_report"],
+        execution_engine: "gpt-4o",
+        parameters: {
+          segment_criteria: ["company_size", "industry", "usage_pattern"],
+          survey_size: 500,
+          analysis_depth: "detailed"
+        },
+        created_at: new Date(now.getTime() - 86400000 * 3), // 3 days ago
+        updated_at: new Date(now.getTime() - 86400000 * 1), // 1 day ago
+        usage_count: 6
+      },
+      {
+        template_id: "template_pricing_strategy",
+        name: "価格戦略策定テンプレート",
+        description: "フリーミアム、階層課金、従量制などの価格モデルを競合分析と顧客価値に基づいて最適化する戦略を策定します。",
+        delegation_type: "価格戦略",
+        purpose_category: "pricing_strategy_document",
+        context_categories: ["competitor_comparison_table", "customer_segment_data"],
+        execution_engine: "claude-3.5-sonnet",
+        parameters: {
+          pricing_models: ["freemium", "tiered", "usage_based"],
+          currency: "JPY",
+          market_positioning: "premium"
+        },
+        created_at: new Date(now.getTime() - 86400000 * 4), // 4 days ago
+        updated_at: new Date(now.getTime() - 86400000 * 2), // 2 days ago
+        usage_count: 10
+      }
+    ]
+  }
+
+  // Template management
+  const [templates, setTemplates] = useState<AgentTemplate[]>(createSampleTemplates())
+
+  // Load/save templates from localStorage on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedTemplates = localStorage.getItem('agent-templates')
+      if (savedTemplates) {
+        setTemplates(JSON.parse(savedTemplates))
+      }
+    }
+  }, [])
+
+  const saveTemplatesToStorage = useCallback((templates: AgentTemplate[]) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('agent-templates', JSON.stringify(templates))
+    }
+  }, [])
+
   // Create sample data with parent-child hierarchy
   const createSampleAgents = (): AgentInfo[] => {
     const now = new Date()
@@ -21,11 +110,10 @@ export function useAgentManager() {
     const parentAgent: AgentInfo = {
       agent_id: "agent_parent_12345",
       parent_agent_id: null,
-      purpose: "market_analysis_report",
-      context: ["business_requirements_document"],
-      delegation_type: "包括的分析",
+      template_id: "template_market_analysis",
+      purpose: "SaaS業界プロジェクト管理ツール市場の包括的分析レポート",
+      context: ["新製品企画書: プロジェクト管理SaaS開発計画"],
       status: "doing",
-      execution_engine: "gemini-2.5-flash",
       delegation_params: {
         target_market: "SaaS業界",
         product_category: "プロジェクト管理ツール",
@@ -40,11 +128,10 @@ export function useAgentManager() {
     const childAgent1: AgentInfo = {
       agent_id: "agent_competitor_67890",
       parent_agent_id: "agent_parent_12345",
-      purpose: "competitor_comparison_table",
-      context: ["market_analysis_report"], // Uses parent's purpose as context
-      delegation_type: "競合分析",
+      template_id: "template_competitor_analysis",
+      purpose: "Asana、Trello、Monday.com、Notion、Clickupの詳細競合比較表",
+      context: ["SaaS業界プロジェクト管理ツール市場の包括的分析レポート"],
       status: "doing",
-      execution_engine: "claude-code",
       delegation_params: {
         target_competitors: ["Asana", "Trello", "Monday.com", "Notion", "Clickup"],
         analysis_depth: "detailed"
@@ -57,11 +144,10 @@ export function useAgentManager() {
     const childAgent2: AgentInfo = {
       agent_id: "agent_customer_11111",
       parent_agent_id: "agent_parent_12345",
-      purpose: "customer_segment_data",
-      context: ["market_analysis_report"], // Uses parent's purpose as context
-      delegation_type: "顧客分析",
+      template_id: "template_customer_analysis",
+      purpose: "スタートアップ・中小企業・大企業別の顧客セグメント詳細データ",
+      context: ["SaaS業界プロジェクト管理ツール市場の包括的分析レポート"],
       status: "needs_input",
-      execution_engine: "gpt-4o",
       delegation_params: {
         survey_size: 500,
         target_segments: ["スタートアップ", "中小企業", "大企業"],
@@ -75,11 +161,10 @@ export function useAgentManager() {
     const childAgent3: AgentInfo = {
       agent_id: "agent_pricing_22222",
       parent_agent_id: "agent_parent_12345",
-      purpose: "pricing_strategy_document",
-      context: ["competitor_comparison_table"], // Uses sibling's purpose as context (waiting for it)
-      delegation_type: "価格戦略",
+      template_id: "template_pricing_strategy",
+      purpose: "フリーミアム・階層課金・従量制を含む最適価格戦略文書",
+      context: ["Asana、Trello、Monday.com、Notion、Clickupの詳細競合比較表"],
       status: "waiting",
-      execution_engine: "claude-3.5-sonnet",
       delegation_params: {
         pricing_models: ["freemium", "tiered", "usage_based"],
         currency: "JPY"
@@ -100,10 +185,9 @@ export function useAgentManager() {
 
   const createAgent = useCallback(
     (
-      purpose: DataUnit,
-      delegation_type: string,
-      context: DataUnit[],
-      execution_engine: ExecutionEngine = "gemini-2.5-flash",
+      purpose: DataUnitValue,
+      template_id: string,
+      context: DataUnitValue[],
       parent_agent_id: string | null = null,
       delegation_params?: Record<string, any>,
     ) => {
@@ -116,12 +200,45 @@ export function useAgentManager() {
 
       const newAgent: AgentInfo = {
         agent_id: generateAgentId(),
+        template_id,
         parent_agent_id,
         purpose,
         context,
-        delegation_type,
         status: "todo",
-        execution_engine,
+        delegation_params,
+        created_at: new Date(),
+        updated_at: new Date(),
+        level,
+      }
+
+      setAgents((prev) => [...prev, newAgent])
+      return newAgent
+    },
+    [generateAgentId, agents],
+  )
+
+  const createAgentWithTemplate = useCallback(
+    (
+      purpose: DataUnitValue,
+      template: AgentTemplate,
+      context: DataUnitValue[],
+      parent_agent_id: string | null = null,
+      delegation_params?: Record<string, any>,
+    ) => {
+      // Calculate level based on parent
+      let level = 0
+      if (parent_agent_id) {
+        const parentAgent = agents.find((a) => a.agent_id === parent_agent_id)
+        level = parentAgent ? parentAgent.level + 1 : 1
+      }
+
+      const newAgent: AgentInfo = {
+        agent_id: generateAgentId(),
+        template_id: template.template_id,
+        parent_agent_id,
+        purpose,
+        context,
+        status: "todo",
         delegation_params,
         created_at: new Date(),
         updated_at: new Date(),
@@ -135,13 +252,79 @@ export function useAgentManager() {
   )
 
   const createAgentFromTemplate = useCallback(
-    (template: AgentTemplate, customPurpose?: DataUnit, customContext?: DataUnit[]) => {
-      const purpose = customPurpose || template.purpose
-      const context = customContext || template.context
+    (template: AgentTemplate, customPurpose?: DataUnitValue, customContext?: DataUnitValue[]) => {
+      // Convert categories to specific values if not provided
+      const purpose = customPurpose || `Generated purpose for ${template.purpose_category}`
+      const context = customContext || template.context_categories.map(cat => `Generated context for ${cat}`)
 
-      return createAgent(purpose, template.delegation_type, context, template.execution_engine, null, template.parameters)
+      // Increment usage count
+      setTemplates(prev => {
+        const updated = prev.map(t => 
+          t.template_id === template.template_id 
+            ? { ...t, usage_count: t.usage_count + 1, updated_at: new Date() }
+            : t
+        )
+        saveTemplatesToStorage(updated)
+        return updated
+      })
+
+      return createAgentWithTemplate(purpose, template, context, null, template.parameters)
     },
-    [createAgent],
+    [createAgentWithTemplate, saveTemplatesToStorage],
+  )
+
+  const saveTemplate = useCallback(
+    (templateData: Omit<AgentTemplate, 'template_id' | 'created_at' | 'updated_at' | 'usage_count'>) => {
+      const newTemplate: AgentTemplate = {
+        ...templateData,
+        template_id: `template_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        created_at: new Date(),
+        updated_at: new Date(),
+        usage_count: 0
+      }
+
+      setTemplates(prev => {
+        const updated = [...prev, newTemplate]
+        saveTemplatesToStorage(updated)
+        return updated
+      })
+
+      return newTemplate
+    },
+    [saveTemplatesToStorage],
+  )
+
+  const updateTemplate = useCallback(
+    (templateId: string, updates: Partial<Omit<AgentTemplate, 'template_id' | 'created_at' | 'usage_count'>>) => {
+      setTemplates(prev => {
+        const updated = prev.map(t => 
+          t.template_id === templateId 
+            ? { ...t, ...updates, updated_at: new Date() }
+            : t
+        )
+        saveTemplatesToStorage(updated)
+        return updated
+      })
+    },
+    [saveTemplatesToStorage],
+  )
+
+  const deleteTemplate = useCallback(
+    (templateId: string) => {
+      setTemplates(prev => {
+        const updated = prev.filter(t => t.template_id !== templateId)
+        saveTemplatesToStorage(updated)
+        return updated
+      })
+    },
+    [saveTemplatesToStorage],
+  )
+
+  const getTemplate = useCallback(
+    (templateId: string) => {
+      return templates.find(t => t.template_id === templateId) || null
+    },
+    [templates],
   )
 
   const updateAgentStatus = useCallback((agent_id: string, status: AgentInfo["status"]) => {
@@ -245,7 +428,6 @@ export function useAgentManager() {
                   "→ 価格戦略立案エージェント (依存関係待ち)",
                   "子エージェントの進捗監視中...",
                 ],
-                progress_percentage: 25,
               }
             
             case "agent_competitor_67890":
@@ -281,7 +463,6 @@ export function useAgentManager() {
                   "Notionの機能・価格分析 待機中",
                   "Clickupの機能・価格分析 待機中",
                 ],
-                progress_percentage: 60,
               }
             
             case "agent_customer_11111":
@@ -321,7 +502,6 @@ export function useAgentManager() {
                   "顧客調査データの入力待機中...",
                   "⚠️ 調査データなしでは分析を進行できません",
                 ],
-                progress_percentage: 15,
               }
             
             case "agent_pricing_22222":
@@ -378,7 +558,6 @@ export function useAgentManager() {
                   "顧客分析エージェントの実行開始待ち (データ不足)",
                   "⏳ 他エージェントの完了待機中...",
                 ],
-                progress_percentage: 10,
               }
             
             default:
@@ -387,7 +566,6 @@ export function useAgentManager() {
                 context_status: mockContextStatus,
                 waiting_for: [],
                 execution_log: ["エージェント初期化完了"],
-                progress_percentage: Math.floor(Math.random() * 100),
               }
           }
         }
@@ -402,7 +580,6 @@ export function useAgentManager() {
           context_status: specificData.context_status,
           waiting_for: specificData.waiting_for,
           execution_log: specificData.execution_log,
-          progress_percentage: specificData.progress_percentage,
           conversation_history: [],
           parent_agent_summary: agent.parent_agent_id 
             ? (() => {
@@ -471,6 +648,10 @@ export function useAgentManager() {
     [],
   )
 
+  const getAgentTemplate = useCallback((agent: AgentInfo) => {
+    return templates.find(t => t.template_id === agent.template_id) || null
+  }, [templates])
+
   return {
     agents,
     createAgent,
@@ -481,5 +662,12 @@ export function useAgentManager() {
     fetchAgentMetaInfo,
     updateContext,
     refreshAgentStatus,
+    getAgentTemplate,
+    // Template management
+    templates,
+    saveTemplate,
+    updateTemplate,
+    deleteTemplate,
+    getTemplate,
   }
 }

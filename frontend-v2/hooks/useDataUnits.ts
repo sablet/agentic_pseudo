@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { dataUnitManager, type DataUnitConfig, type DataUnitCategory } from "@/lib/data-units-config"
-import type { DataUnit } from "@/types/agent"
+import { dataUnitManager, type DataUnitConfig, type DataUnitCategoryInfo } from "@/lib/data-units-config"
+import type { DataUnit, DataUnitCategory } from "@/types/agent"
 
 export function useDataUnits() {
   const [dataUnits, setDataUnits] = useState<DataUnitConfig[]>([])
-  const [categories, setCategories] = useState<DataUnitCategory[]>([])
+  const [categories, setCategories] = useState<DataUnitCategoryInfo[]>([])
   const [loading, setLoading] = useState(true)
 
   const loadData = useCallback(() => {
@@ -81,7 +81,7 @@ export function useDataUnits() {
     }
   }, [loadData])
 
-  const addCategory = useCallback((category: Omit<DataUnitCategory, "editable">) => {
+  const addCategory = useCallback((category: Omit<DataUnitCategoryInfo, "editable">) => {
     try {
       dataUnitManager.addCategory(category)
       loadData()
@@ -92,7 +92,7 @@ export function useDataUnits() {
     }
   }, [loadData])
 
-  const updateCategory = useCallback((oldId: string, newCategory: DataUnitCategory) => {
+  const updateCategory = useCallback((oldId: string, newCategory: DataUnitCategoryInfo) => {
     try {
       dataUnitManager.updateCategory(oldId, newCategory)
       loadData()

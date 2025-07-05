@@ -15,13 +15,13 @@ interface AgentStatusListProps {
 export function AgentStatusList({ agents, onExecuteAgent }: AgentStatusListProps) {
   const getStatusIcon = (status: AgentInfo["status"]) => {
     switch (status) {
-      case "pending":
+      case "todo":
         return <Clock className="h-4 w-4" />
-      case "in_progress":
+      case "doing":
         return <ArrowRight className="h-4 w-4 animate-pulse" />
-      case "completed":
+      case "waiting":
         return <CheckCircle className="h-4 w-4" />
-      case "failed":
+      case "needs_input":
         return <XCircle className="h-4 w-4" />
       default:
         return <Clock className="h-4 w-4" />
@@ -30,21 +30,21 @@ export function AgentStatusList({ agents, onExecuteAgent }: AgentStatusListProps
 
   const getStatusColor = (status: AgentInfo["status"]) => {
     switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800"
-      case "in_progress":
+      case "todo":
         return "bg-blue-100 text-blue-800"
-      case "completed":
+      case "doing":
         return "bg-green-100 text-green-800"
-      case "failed":
+      case "waiting":
+        return "bg-yellow-100 text-yellow-800"
+      case "needs_input":
         return "bg-red-100 text-red-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
   }
 
-  const pendingAgents = agents.filter((agent) => agent.status === "pending")
-  const activeAgents = agents.filter((agent) => ["in_progress", "completed", "failed"].includes(agent.status))
+  const pendingAgents = agents.filter((agent) => agent.status === "todo")
+  const activeAgents = agents.filter((agent) => ["doing", "waiting", "needs_input"].includes(agent.status))
 
   return (
     <div className="space-y-4">
@@ -65,7 +65,7 @@ export function AgentStatusList({ agents, onExecuteAgent }: AgentStatusListProps
                       <div className="flex-1">
                         <p className="font-medium text-sm">{agent.purpose}</p>
                         <p className="text-xs text-gray-600 mt-1">ID: {agent.agent_id.slice(-8)}</p>
-                        <p className="text-xs text-gray-600">タイプ: {agent.delegation_type}</p>
+                        <p className="text-xs text-gray-600">目的: {agent.purpose}</p>
                         {agent.parent_agent_id && (
                           <p className="text-xs text-gray-600">親: {agent.parent_agent_id.slice(-8)}</p>
                         )}
@@ -109,7 +109,7 @@ export function AgentStatusList({ agents, onExecuteAgent }: AgentStatusListProps
                           </Badge>
                         </div>
                         <p className="text-xs text-gray-600">ID: {agent.agent_id.slice(-8)}</p>
-                        <p className="text-xs text-gray-600">タイプ: {agent.delegation_type}</p>
+                        <p className="text-xs text-gray-600">目的: {agent.purpose}</p>
                         <p className="text-xs text-gray-600">更新: {agent.updated_at.toLocaleString("ja-JP")}</p>
                       </div>
                     </div>

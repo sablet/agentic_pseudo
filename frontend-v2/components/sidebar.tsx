@@ -30,13 +30,13 @@ export function Sidebar({
 
   const getStatusIcon = (status: AgentInfo["status"]) => {
     switch (status) {
-      case "pending":
+      case "todo":
         return <Clock className="h-4 w-4" />
-      case "in_progress":
+      case "doing":
         return <ArrowRight className="h-4 w-4 animate-pulse" />
-      case "completed":
+      case "waiting":
         return <CheckCircle className="h-4 w-4" />
-      case "failed":
+      case "needs_input":
         return <XCircle className="h-4 w-4" />
       default:
         return <Clock className="h-4 w-4" />
@@ -45,14 +45,14 @@ export function Sidebar({
 
   const getStatusBadgeClass = (status: AgentInfo["status"]) => {
     switch (status) {
-      case "pending":
-        return "status-pending"
-      case "in_progress":
-        return "status-progress"
-      case "completed":
-        return "status-completed"
-      case "failed":
-        return "status-error"
+      case "todo":
+        return "bg-blue-100 text-blue-800"
+      case "doing":
+        return "bg-green-100 text-green-800"
+      case "waiting":
+        return "bg-yellow-100 text-yellow-800"
+      case "needs_input":
+        return "bg-red-100 text-red-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
@@ -60,14 +60,14 @@ export function Sidebar({
 
   const getStatusText = (status: AgentInfo["status"]) => {
     switch (status) {
-      case "pending":
+      case "todo":
         return "実行待ち"
-      case "in_progress":
+      case "doing":
         return "実行中"
-      case "completed":
-        return "完了"
-      case "failed":
-        return "失敗"
+      case "waiting":
+        return "待機中"
+      case "needs_input":
+        return "入力待ち"
       default:
         return "不明"
     }
@@ -167,12 +167,12 @@ export function Sidebar({
                           </p>
                           <div className="space-y-1 text-xs text-slate-500">
                             <p>ID: {agent.agent_id.slice(-8)}</p>
-                            <p>タイプ: {agent.delegation_type}</p>
+                            <p>目的: {agent.purpose}</p>
                             {agent.parent_agent_id && <p>親: {agent.parent_agent_id.slice(-8)}</p>}
                             <p>更新: {agent.updated_at.toLocaleString("ja-JP")}</p>
                           </div>
                         </div>
-                        {agent.status === "pending" && (
+                        {agent.status === "todo" && (
                           <Button
                             size="sm"
                             onClick={() => {

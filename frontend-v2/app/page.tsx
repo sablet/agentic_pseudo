@@ -7,6 +7,7 @@ import { AgentConversation } from "@/components/agent-conversation"
 import { AgentTemplateCreator } from "@/components/agent-template-creator"
 import { AgentInfoPanel } from "@/components/agent-info-panel"
 import { DataUnitManager } from "@/components/data-unit-manager"
+import { TemplateGallery } from "@/components/template-gallery"
 import { Button } from "@/components/ui/button"
 import { Settings } from "lucide-react"
 import type { AgentMetaInfo, ContextStatus, WaitingInfo, ConversationMessage } from "@/types/agent"
@@ -20,10 +21,16 @@ export default function AgentCommunicationSystem() {
     completeAgent,
     fetchAgentMetaInfo,
     updateContext,
+    templates,
+    saveTemplate,
+    updateTemplate,
+    deleteTemplate,
+    getTemplate,
   } = useAgentManager()
   
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
   const [isTemplateCreatorOpen, setIsTemplateCreatorOpen] = useState(false)
+  const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false)
   const [isDataUnitManagerOpen, setIsDataUnitManagerOpen] = useState(false)
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -175,12 +182,42 @@ export default function AgentCommunicationSystem() {
   }
 
   const handleCreateAgent = () => {
+    if (templates.length > 0) {
+      setIsTemplateGalleryOpen(true)
+    } else {
+      setIsTemplateCreatorOpen(true)
+    }
+  }
+
+  const handleCreateFromScratch = () => {
     setIsTemplateCreatorOpen(true)
+  }
+
+  const handleSaveTemplate = (template: any) => {
+    const savedTemplate = saveTemplate(template)
+    console.log("Template saved:", savedTemplate)
   }
 
   const handleCreateAgentFromTemplate = (template: any) => {
     const newAgent = createAgentFromTemplate(template)
     console.log("Agent created from template:", newAgent)
+  }
+
+  const handleSelectTemplate = (template: any) => {
+    const newAgent = createAgentFromTemplate(template)
+    console.log("Agent created from selected template:", newAgent)
+    setIsTemplateGalleryOpen(false)
+  }
+
+  const handleEditTemplate = (template: any) => {
+    // TODO: Implement template editing
+    console.log("Edit template:", template)
+  }
+
+  const handleDeleteTemplate = (templateId: string) => {
+    if (confirm("このテンプレートを削除しますか？")) {
+      deleteTemplate(templateId)
+    }
   }
 
   // Get current agent info for AgentInfoPanel
@@ -229,7 +266,6 @@ export default function AgentCommunicationSystem() {
         "必要なコンテキストを分析中...",
         "入力待機中",
       ],
-      progress_percentage: Math.floor(Math.random() * 100),
       conversation_history: conversationHistory,
       parent_agent_summary: selectedAgent.parent_agent_id 
         ? {
@@ -283,6 +319,8 @@ export default function AgentCommunicationSystem() {
             onSelectAgent={handleSelectAgent}
             onExecuteAgent={handleExecuteAgent}
             onCreateAgent={handleCreateAgent}
+            onCreateFromScratch={handleCreateFromScratch}
+            hasTemplates={templates.length > 0}
           />
         </div>
 
@@ -310,7 +348,17 @@ export default function AgentCommunicationSystem() {
       <AgentTemplateCreator
         isOpen={isTemplateCreatorOpen}
         onClose={() => setIsTemplateCreatorOpen(false)}
+        onSaveTemplate={handleSaveTemplate}
         onCreateAgent={handleCreateAgentFromTemplate}
+      />
+
+      <TemplateGallery
+        isOpen={isTemplateGalleryOpen}
+        onClose={() => setIsTemplateGalleryOpen(false)}
+        templates={templates}
+        onSelectTemplate={handleSelectTemplate}
+        onDeleteTemplate={handleDeleteTemplate}
+        onEditTemplate={handleEditTemplate}
       />
 
       {isDataUnitManagerOpen && (

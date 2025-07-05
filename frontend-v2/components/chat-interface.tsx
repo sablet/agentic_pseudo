@@ -40,7 +40,7 @@ export function ChatInterface({
     onApproveAgent(proposal)
   }
 
-  const inProgressAgents = agents.filter((agent) => agent.status === "in_progress")
+  const inProgressAgents = agents.filter((agent) => agent.status === "doing")
 
   const renderMessage = (message: ChatMessage) => {
     if (message.role === "system_notification") {
