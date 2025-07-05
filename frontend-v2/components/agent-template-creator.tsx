@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -27,6 +27,7 @@ interface AgentTemplateCreatorProps {
   onClose: () => void
   onSaveTemplate: (template: Omit<AgentTemplate, 'template_id' | 'created_at' | 'updated_at' | 'usage_count'>) => void
   onCreateAgent: (template: AgentTemplate) => void
+  editingTemplate?: AgentTemplate | null
 }
 
 export function AgentTemplateCreator({
@@ -34,6 +35,7 @@ export function AgentTemplateCreator({
   onClose,
   onSaveTemplate,
   onCreateAgent,
+  editingTemplate,
 }: AgentTemplateCreatorProps) {
   const [formData, setFormData] = useState({
     name: "",
@@ -56,6 +58,22 @@ export function AgentTemplateCreator({
       parameters: "{}",
     })
   }
+
+  useEffect(() => {
+    if (editingTemplate) {
+      setFormData({
+        name: editingTemplate.name,
+        description: editingTemplate.description,
+        delegation_type: editingTemplate.delegation_type,
+        purpose_category: editingTemplate.purpose_category,
+        context_categories: [...editingTemplate.context_categories],
+        execution_engine: editingTemplate.execution_engine,
+        parameters: JSON.stringify(editingTemplate.parameters, null, 2),
+      })
+    } else {
+      resetForm()
+    }
+  }, [editingTemplate, isOpen])
 
   const handleClose = () => {
     resetForm()
@@ -167,7 +185,7 @@ export function AgentTemplateCreator({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Target className="h-5 w-5" />
-            新しいエージェントテンプレート作成
+            {editingTemplate ? "エージェントテンプレート編集" : "新しいエージェントテンプレート作成"}
           </DialogTitle>
         </DialogHeader>
 

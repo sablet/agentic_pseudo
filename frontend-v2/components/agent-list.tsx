@@ -17,7 +17,8 @@ import {
   ArrowDown,
   MoreVertical,
   ChevronDown,
-  BookTemplate
+  BookTemplate,
+  MessageSquare
 } from "lucide-react"
 import type { AgentInfo } from "@/types/agent"
 
@@ -29,6 +30,7 @@ interface AgentListProps {
   onCreateAgent: () => void
   onCreateFromScratch?: () => void
   hasTemplates?: boolean
+  getMessageCount?: (agentId: string) => number
 }
 
 export function AgentList({
@@ -39,6 +41,7 @@ export function AgentList({
   onCreateAgent,
   onCreateFromScratch,
   hasTemplates = false,
+  getMessageCount,
 }: AgentListProps) {
   const [showCreateMenu, setShowCreateMenu] = React.useState(false)
   const getStatusColor = (status: AgentInfo["status"]) => {
@@ -152,14 +155,19 @@ export function AgentList({
             </p>
             
             <div className="flex items-center justify-between">
-              <div className="text-xs text-slate-500">
-                <p>ID: {agent.agent_id.slice(-8)}</p>
+              <div className="text-xs text-slate-500 space-y-1">
                 <p>更新: {agent.updated_at.toLocaleString("ja-JP", { 
                   month: "short", 
                   day: "numeric", 
                   hour: "2-digit", 
                   minute: "2-digit" 
                 })}</p>
+                {getMessageCount && (
+                  <div className="flex items-center gap-1">
+                    <MessageSquare className="h-3 w-3" />
+                    <span>{getMessageCount(agent.agent_id)} メッセージ</span>
+                  </div>
+                )}
               </div>
               
               {agent.status === "todo" && (

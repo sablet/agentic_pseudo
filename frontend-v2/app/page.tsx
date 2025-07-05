@@ -34,6 +34,7 @@ export default function AgentCommunicationSystem() {
   const [isDataUnitManagerOpen, setIsDataUnitManagerOpen] = useState(false)
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [editingTemplate, setEditingTemplate] = useState<any>(null)
 
   const selectedAgent = selectedAgentId 
     ? agents.find((agent) => agent.agent_id === selectedAgentId) || null
@@ -210,7 +211,8 @@ export default function AgentCommunicationSystem() {
   }
 
   const handleEditTemplate = (template: any) => {
-    // TODO: Implement template editing
+    setEditingTemplate(template)
+    setIsTemplateCreatorOpen(true)
     console.log("Edit template:", template)
   }
 
@@ -347,9 +349,13 @@ export default function AgentCommunicationSystem() {
 
       <AgentTemplateCreator
         isOpen={isTemplateCreatorOpen}
-        onClose={() => setIsTemplateCreatorOpen(false)}
+        onClose={() => {
+          setIsTemplateCreatorOpen(false)
+          setEditingTemplate(null)
+        }}
         onSaveTemplate={handleSaveTemplate}
         onCreateAgent={handleCreateAgentFromTemplate}
+        editingTemplate={editingTemplate}
       />
 
       <TemplateGallery

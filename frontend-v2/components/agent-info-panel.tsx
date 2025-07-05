@@ -134,9 +134,6 @@ export function AgentInfoPanel({
             <h2 className="text-lg font-semibold text-slate-900 truncate">
               {agentInfo.purpose}
             </h2>
-            <p className="text-sm text-slate-500 mt-1">
-              ID: {agentInfo.agent_id.slice(-8)}
-            </p>
           </div>
           <div className="flex gap-2 ml-4">
             <Button
@@ -311,9 +308,6 @@ export function AgentInfoPanel({
                           {agentInfo.parent_agent_summary.purpose}
                         </p>
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            ID: {agentInfo.parent_agent_summary.agent_id.slice(-8)}
-                          </Badge>
                           <Badge className={`text-xs ${
                             agentInfo.parent_agent_summary.level === 0 ? "bg-purple-100 text-purple-800" :
                             agentInfo.parent_agent_summary.level === 1 ? "bg-blue-100 text-blue-800" :
@@ -348,9 +342,6 @@ export function AgentInfoPanel({
                               {child.purpose}
                             </p>
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                ID: {child.agent_id.slice(-8)}
-                              </Badge>
                               <Badge className={`text-xs ${
                                 child.level === 0 ? "bg-purple-100 text-purple-800" :
                                 child.level === 1 ? "bg-blue-100 text-blue-800" :

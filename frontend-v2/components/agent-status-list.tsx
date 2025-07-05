@@ -64,11 +64,7 @@ export function AgentStatusList({ agents, onExecuteAgent }: AgentStatusListProps
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <p className="font-medium text-sm">{agent.purpose}</p>
-                        <p className="text-xs text-gray-600 mt-1">ID: {agent.agent_id.slice(-8)}</p>
                         <p className="text-xs text-gray-600">目的: {agent.purpose}</p>
-                        {agent.parent_agent_id && (
-                          <p className="text-xs text-gray-600">親: {agent.parent_agent_id.slice(-8)}</p>
-                        )}
                       </div>
                       <Button size="sm" onClick={() => onExecuteAgent(agent.agent_id)} className="ml-2">
                         <Play className="h-3 w-3 mr-1" />
@@ -108,7 +104,6 @@ export function AgentStatusList({ agents, onExecuteAgent }: AgentStatusListProps
                             </span>
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-600">ID: {agent.agent_id.slice(-8)}</p>
                         <p className="text-xs text-gray-600">目的: {agent.purpose}</p>
                         <p className="text-xs text-gray-600">更新: {agent.updated_at.toLocaleString("ja-JP")}</p>
                       </div>

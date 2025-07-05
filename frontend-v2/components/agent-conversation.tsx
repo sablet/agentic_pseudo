@@ -97,9 +97,6 @@ export function AgentConversation({
             <CardTitle className="text-lg font-semibold text-slate-900">
               {agent.purpose}
             </CardTitle>
-            <Badge variant="outline" className="text-xs">
-              ID: {agent.agent_id.slice(-8)}
-            </Badge>
             <Badge 
               className={`text-xs ${
                 agent.status === "todo" ? "bg-blue-100 text-blue-800" :
@@ -113,10 +110,6 @@ export function AgentConversation({
                agent.status === "waiting" ? "待機中" :
                "入力待ち"}
             </Badge>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <Clock className="h-4 w-4" />
-            <span>{conversationHistory.length} メッセージ</span>
           </div>
         </div>
         <p className="text-sm text-slate-600 mt-2">
