@@ -105,7 +105,7 @@ export function ChatInterface({
   }
 
   return (
-    <Card className="h-[calc(100vh-3rem)] flex flex-col shadow-lg border-slate-200">
+    <Card className="h-full flex flex-col shadow-lg border-slate-200">
       <CardContent className="flex-1 flex flex-col gap-0 p-0">
         {/* セッション情報ヘッダー */}
         <div className="business-header">
