@@ -247,8 +247,10 @@ tailwind.config.js              # Tailwind CSS + shadcn/ui
 
 #### 基本起動
 ```bash
-# 開発サーバー起動
-npm run dev
+# バックグラウンド実行の場合
+npm run dev &  # バックグラウンドで起動
+jobs           # 実行中ジョブ一覧
+fg %1          # フォアグラウンドに戻す
 
 # 通常はport 3000で起動
 # ▲ Next.js 15.2.4
@@ -269,11 +271,6 @@ kill -9 $(lsof -t -i:3000)
 
 # または特定のPIDで終了
 kill -9 <PID>
-
-# バックグラウンド実行の場合
-npm run dev &  # バックグラウンドで起動
-jobs           # 実行中ジョブ一覧
-fg %1          # フォアグラウンドに戻す
 ```
 
 #### 代替ポート使用
@@ -424,8 +421,203 @@ Ctrl+C  # 開発サーバー停止
 # - React DevTools: コンポーネント状態確認
 ```
 
+## frontend-v2/ ファイル構成と依存関係
+
+### 主要ディレクトリ構造
+```
+frontend-v2/
+├── types/
+│   └── agent.ts                    # 型定義の中心
+├── hooks/
+│   ├── useAgentManager.ts          # 状態管理とビジネスロジック
+│   ├── useDataUnits.ts             # DataUnit管理
+│   ├── use-mobile.tsx              # レスポンシブ対応（ui/sidebar.tsx依存）
+│   └── use-toast.ts                # トースト通知（ui/toaster.tsx依存）
+├── components/
+│   ├── agent-list.tsx              # エージェント一覧UI
+│   ├── agent-conversation.tsx      # 会話UI
+│   ├── agent-info-panel.tsx        # 詳細情報パネル
+│   ├── agent-template-creator.tsx  # テンプレート作成
+│   ├── agent-relationship-view.tsx # エージェント関係図
+│   ├── agent-status-list.tsx       # ステータス一覧
+│   ├── template-gallery.tsx        # テンプレート一覧
+│   ├── data-unit-manager.tsx       # DataUnit管理
+│   ├── data-unit-selector.tsx      # DataUnit選択
+│   ├── context-status-card.tsx     # コンテキスト状況表示
+│   ├── theme-provider.tsx          # テーマ管理
+│   └── ui/                         # shadcn/ui基盤コンポーネント
+│       ├── sidebar.tsx             # サイドバー（use-mobile.tsx依存）
+│       ├── toaster.tsx             # トースト（use-toast.ts依存）
+│       └── [その他40+のUIコンポーネント]
+├── app/
+│   ├── page.tsx                    # メインレイアウト
+│   ├── layout.tsx                  # アプリケーションレイアウト
+│   └── globals.css                 # グローバルスタイル
+└── lib/
+    ├── data-units-config.ts        # DataUnit設定
+    └── utils.ts                    # ユーティリティ関数
+```
+
+### 典型的な変更ケースと依存ファイル
+
+#### 1. 新しいDataUnitの追加
+**変更対象**: DataUnitの種類を追加する場合
+```
+必須変更ファイル:
+- types/agent.ts (DataUnitCategory型に追加)
+- lib/data-units-config.ts (日本語ラベル・カテゴリ追加)
+
+影響を受ける可能性:
+- components/data-unit-selector.tsx (新しいカテゴリ表示)
+- components/agent-template-creator.tsx (選択肢に反映)
+```
+
+#### 2. エージェントステータスの変更
+**変更対象**: 新しいステータス追加（例: "paused", "completed"）
+```
+必須変更ファイル:
+- types/agent.ts (AgentInfo["status"]に追加)
+- components/agent-list.tsx (getStatusColor, getStatusIcon, getStatusText)
+- hooks/useAgentManager.ts (groupedAgents, updateAgentStatus)
+
+影響を受ける可能性:
+- components/agent-status-list.tsx (ステータス別表示)
+- components/agent-info-panel.tsx (ステータス表示)
+```
+
+#### 3. UIレイアウトの変更
+**変更対象**: パネル配置やレスポンシブ対応
+```
+必須変更ファイル:
+- app/page.tsx (メインレイアウト構造)
+
+レスポンシブ対応時の追加変更:
+- hooks/use-mobile.tsx (ブレークポイント調整)
+- components/ui/sidebar.tsx (モバイル表示対応)
+```
+
+#### 4. 新しい実行エンジンの追加
+**変更対象**: AI実行エンジンの選択肢追加
+```
+必須変更ファイル:
+- types/agent.ts (ExecutionEngine型に追加)
+- components/agent-template-creator.tsx (ドロップダウン選択肢)
+
+影響を受ける可能性:
+- hooks/useAgentManager.ts (サンプルデータに反映)
+```
+
+#### 5. コンテキスト管理機能の拡張
+**変更対象**: 新しいコンテキストタイプ追加
+```
+必須変更ファイル:
+- types/agent.ts (ContextStatus["type"]に追加)
+- components/agent-info-panel.tsx (コンテキスト表示・編集UI)
+
+関連ファイル:
+- components/context-status-card.tsx (コンテキストカード表示)
+- hooks/useAgentManager.ts (updateContext処理)
+```
+
+#### 6. エージェント階層管理の変更
+**変更対象**: 親子関係の可視化改善
+```
+必須変更ファイル:
+- components/agent-relationship-view.tsx (階層図表示)
+- components/agent-list.tsx (親子関係アイコン)
+- hooks/useAgentManager.ts (createAgent, level計算)
+
+影響を受ける可能性:
+- types/agent.ts (AgentNode, AgentEdge型の拡張)
+```
+
+#### 7. テンプレート機能の拡張
+**変更対象**: テンプレート機能の改善
+```
+必須変更ファイル:
+- types/agent.ts (AgentTemplate型の拡張)
+- components/agent-template-creator.tsx (テンプレート作成UI)
+- components/template-gallery.tsx (テンプレート一覧・管理)
+- hooks/useAgentManager.ts (テンプレート管理ロジック)
+
+影響を受ける可能性:
+- components/data-unit-selector.tsx (テンプレート連携)
+```
+
+#### 8. 会話履歴の機能拡張
+**変更対象**: メッセージタイプやUI改善
+```
+必須変更ファイル:
+- types/agent.ts (ConversationMessage型の拡張)
+- components/agent-conversation.tsx (会話UI)
+- app/page.tsx (会話履歴管理ロジック)
+
+影響を受ける可能性:
+- components/agent-info-panel.tsx (会話履歴表示)
+```
+
+#### 9. 通知・トースト機能の変更
+**変更対象**: エラー表示や成功通知の改善
+```
+削除不可・必須ファイル:
+- hooks/use-toast.ts (トースト状態管理）
+- components/ui/toaster.tsx (トースト表示)
+- components/ui/toast.tsx (トーストコンポーネント)
+
+影響を受ける可能性:
+- app/layout.tsx (Toasterプロバイダー)
+- [各コンポーネント] (useToast呼び出し箇所)
+```
+
+#### 10. レスポンシブ対応の変更
+**変更対象**: モバイル・タブレット表示の改善
+```
+削除不可・必須ファイル:
+- hooks/use-mobile.tsx (ブレークポイント判定)
+- components/ui/sidebar.tsx (モバイル対応サイドバー)
+
+影響を受ける可能性:
+- components/ui/[その他] (モバイル対応UIコンポーネント)
+- app/page.tsx (レスポンシブレイアウト)
+```
+
+### 削除不可ファイルと理由
+
+#### shadcn/ui依存ファイル（削除禁止）
+```
+hooks/use-mobile.tsx        # ui/sidebar.tsx が必須依存
+hooks/use-toast.ts          # ui/toaster.tsx が必須依存
+components/ui/sidebar.tsx   # use-mobile.tsx 必須依存
+components/ui/toaster.tsx   # use-toast.ts 必須依存
+```
+
+### ファイル間依存関係マップ
+
+#### 最高依存度（Core - 変更時影響大）
+- `types/agent.ts` ← **全コンポーネントが依存**
+- `hooks/useAgentManager.ts` ← 状態管理の中心
+- `app/page.tsx` ← メインエントリーポイント
+
+#### 高依存度（UI Layer - 変更時影響中）
+- `components/agent-list.tsx` ← エージェント表示の核
+- `components/agent-info-panel.tsx` ← 詳細情報表示
+- `components/agent-conversation.tsx` ← 会話機能
+- `hooks/use-mobile.tsx` ← レスポンシブ判定（削除不可）
+- `hooks/use-toast.ts` ← 通知機能（削除不可）
+
+#### 中依存度（Feature Specific - 変更時影響小）
+- `components/data-unit-selector.tsx` ← テンプレート作成時のみ
+- `components/template-gallery.tsx` ← テンプレート管理時のみ
+- `lib/data-units-config.ts` ← DataUnit関連機能のみ
+
+#### 低依存度（Standalone - 変更時影響最小）
+- `components/context-status-card.tsx` ← 詳細パネル内のみ
+- `components/agent-relationship-view.tsx` ← 関係図表示のみ
+- `components/theme-provider.tsx` ← テーマ管理のみ
+
 ## 結論
 
 エージェント中心UIシステムへの変換が完了。DataUnitシステムによるエージェント間データフロー、実行エンジン選択、階層管理機能を含む完全なエージェント管理システムを実装。
 
 **現在の状態**: 完全動作確認済み、プロダクション準備完了
+**ファイル整理**: 未使用ファイル削除完了、shadcn/ui依存ファイルの管理整備完了
