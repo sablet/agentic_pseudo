@@ -464,3 +464,571 @@ curl -X POST http://localhost:8000/api/tasks/create \
 - タスクの説明をわかりやすく簡潔に実行
 
 このAPIを使用することで、複雑な AI エージェントによる自動実行を効率的に管理し、様々なタスクを自動化できます。
+
+## 新しいUI（frontend_new）との互換性分析
+
+### パターン1: そのまま使用可能なAPI
+
+以下のAPIは新しいUIでもそのまま利用できます：
+
+#### POST /api/sessions
+- **用途**: セッション作成
+- **UI対応**: ✅ 完全対応
+- **理由**: セッション管理機能は同じ仕様で利用可能
+
+#### DELETE /api/sessions/{session_id}
+- **用途**: セッション削除
+- **UI対応**: ✅ 完全対応
+- **理由**: クリーンアップ機能として利用可能
+
+#### GET /api/agents
+- **用途**: エージェント一覧取得
+- **UI対応**: ✅ 完全対応
+- **理由**: エージェント情報表示で利用可能
+
+#### GET /
+- **用途**: API動作確認
+- **UI対応**: ✅ 完全対応
+- **理由**: ヘルスチェック機能として利用可能
+
+### パターン2: スキーマ変更が必要なAPI
+
+以下のAPIは新しいUIの要件に合わせてスキーマ変更が必要です：
+
+#### GET /api/tasks/status/{session_id}
+- **現在のスキーマ**: daily_tasks, info_references の分離
+- **必要な変更**: 
+  ```json
+  {
+    "session_id": "string",
+    "phases": [
+      {
+        "id": "phase1",
+        "name": "フェーズ1: 環境構築とデータ準備",
+        "description": "開発環境の構築とデータの収集・前処理を行います",
+        "status": "completed|running|pending|waiting_approval",
+        "tasks": [
+          {
+            "id": "task1_1",
+            "name": "1.1 開発環境構築",
+            "description": "Python環境とライブラリのセットアップ",
+            "status": "completed|ai_completed|editing|running|waiting_approval|failed|pending",
+            "phase": "phase1",
+            "dependencies": ["task_id"],
+            "type": "ai|user",
+            "assignee": "ai|user",
+            "messages": [
+              {
+                "id": "msg1",
+                "role": "user|assistant",
+                "content": "メッセージ内容",
+                "timestamp": "2024-01-15 09:00:00",
+                "isEditing": false
+              }
+            ],
+            "result": "実行結果",
+            "logs": ["ログエントリ"],
+            "variables": {}
+          }
+        ]
+      }
+    ]
+  }
+  ```
+- **理由**: 新UIはフェーズベースの階層構造とメッセージ機能が必要
+
+#### POST /api/tasks/create
+- **現在のスキーマ**: 単一指示でタスクプラン作成
+- **必要な変更**:
+  ```json
+  // リクエスト
+  {
+    "user_instruction": "string",
+    "session_id": "string",
+    "phase_id": "string", // 新規追加
+    "context": {          // 新規追加
+      "previous_phases": ["phase1"],
+      "query_history": ["過去のクエリ"]
+    }
+  }
+  
+  // レスポンス
+  {
+    "session_id": "string",
+    "phase": {            // planから変更
+      "id": "phase2",
+      "name": "フェーズ名",
+      "description": "説明",
+      "status": "pending",
+      "tasks": [...]
+    },
+    "message": "string"
+  }
+  ```
+- **理由**: フェーズベースの構造化とコンテキスト情報が必要
+
+#### PUT /api/tasks/update/{session_id}/{task_id}
+- **現在のスキーマ**: status, result のみ更新
+- **必要な変更**:
+  ```json
+  // リクエスト
+  {
+    "status": "string",
+    "result": "string",
+    "messages": [       // 新規追加
+      {
+        "role": "user|assistant",
+        "content": "string",
+        "timestamp": "string"
+      }
+    ],
+    "variables": {}     // 新規追加
+  }
+  ```
+- **理由**: メッセージ履歴と変数管理機能が必要
+
+### パターン3: 新しいUIでは不要なAPI
+
+以下のAPIは新しいUIでは使用されません：
+
+#### POST /api/hearing
+- **理由**: 新UIではクエリ分解チャット機能でヒアリングを代替
+- **代替**: クエリ分解API（新規実装）で対応
+
+#### GET /api/hearing/{session_id}
+- **理由**: 同上、ヒアリング機能は統合型チャットに置き換え
+- **代替**: セッション内のクエリ履歴で対応
+
+#### POST /api/tasks/execute/{session_id}
+- **理由**: 新UIでは個別タスクの実行制御が必要
+- **代替**: 個別タスク実行API（新規実装）で対応
+
+### パターン4: 新規実装が必要なAPI
+
+以下のAPIは新しいUIの機能実現のために新規実装が必要です：
+
+#### POST /api/query/decompose
+クエリ分解チャット機能のためのAPI
+
+**リクエスト:**
+```json
+{
+  "session_id": "string",
+  "query": "プロジェクトについて教えてください",
+  "conversation_history": [
+    {
+      "role": "user|assistant",
+      "content": "string",
+      "timestamp": "string"
+    }
+  ]
+}
+```
+
+**レスポンス:**
+```json
+{
+  "response": {
+    "content": "詳細を教えてください...",
+    "suggestions": ["提案1", "提案2", "提案3"],
+    "analysis": {
+      "project_type": "web_application",
+      "complexity": "medium",
+      "requirements_complete": false
+    }
+  },
+  "conversation_id": "string"
+}
+```
+
+#### POST /api/workflows/generate
+クエリからワークフローを生成するAPI
+
+**リクエスト:**
+```json
+{
+  "session_id": "string",
+  "conversation_id": "string",
+  "finalize": true
+}
+```
+
+**レスポンス:**
+```json
+{
+  "workflow": {
+    "phases": [
+      {
+        "id": "phase1",
+        "name": "フェーズ1: 要件定義",
+        "description": "プロジェクトの要件を明確化します",
+        "estimated_tasks": 3,
+        "estimated_duration": "2-3日"
+      }
+    ]
+  },
+  "message": "ワークフローを生成しました"
+}
+```
+
+#### POST /api/tasks/{task_id}/messages
+タスクにメッセージを追加するAPI
+
+**リクエスト:**
+```json
+{
+  "role": "user|assistant",
+  "content": "メッセージ内容"
+}
+```
+
+**レスポンス:**
+```json
+{
+  "message": {
+    "id": "msg_001",
+    "role": "user",
+    "content": "メッセージ内容",
+    "timestamp": "2024-01-15 09:00:00"
+  }
+}
+```
+
+#### PUT /api/tasks/{task_id}/messages/{message_id}
+メッセージ編集API
+
+**リクエスト:**
+```json
+{
+  "content": "編集後の内容"
+}
+```
+
+#### POST /api/tasks/{task_id}/execute
+個別タスク実行API
+
+**リクエスト:**
+```json
+{
+  "context": {
+    "previous_results": ["前のタスクの結果"],
+    "user_input": "追加の指示"
+  }
+}
+```
+
+**レスポンス:**
+```json
+{
+  "task_id": "string",
+  "status": "running|completed|failed",
+  "execution_log": ["ログエントリ"],
+  "result": "実行結果（完了時）"
+}
+```
+
+#### PUT /api/tasks/{task_id}/approve
+タスク承認API
+
+**リクエスト:**
+```json
+{
+  "action": "approve|reject",
+  "comment": "承認コメント（オプション）"
+}
+```
+
+#### POST /api/tasks/{task_id}/retry
+タスク再実行API
+
+**リクエスト:**
+```json
+{
+  "retry_reason": "再実行理由",
+  "modified_instruction": "修正された指示（オプション）"
+}
+```
+
+#### GET /api/sessions/{session_id}/phases
+フェーズ一覧取得API
+
+**レスポンス:**
+```json
+{
+  "phases": [
+    {
+      "id": "phase1",
+      "name": "フェーズ1: 環境構築とデータ準備",
+      "description": "開発環境の構築とデータの収集・前処理を行います",
+      "status": "completed",
+      "task_count": 3,
+      "completed_tasks": 3,
+      "created_at": "2024-01-15T09:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    }
+  ]
+}
+```
+
+#### PUT /api/phases/{phase_id}/status
+フェーズステータス更新API
+
+**リクエスト:**
+```json
+{
+  "status": "pending|running|completed|waiting_approval",
+  "comment": "ステータス変更理由"
+}
+```
+
+#### WebSocket /ws/sessions/{session_id}/realtime
+リアルタイム更新用WebSocket接続
+
+**送信メッセージ例:**
+```json
+{
+  "type": "task_status_update",
+  "task_id": "task_001",
+  "status": "running",
+  "progress": 50
+}
+```
+
+**受信メッセージ例:**
+```json
+{
+  "type": "task_completed",
+  "task_id": "task_001",
+  "result": "タスクが完了しました",
+  "timestamp": "2024-01-15T10:00:00Z"
+}
+```
+
+## 実装優先度
+
+### 高優先度（UI基本機能に必要）
+1. ✅ フェーズベースのタスク構造対応（スキーマ変更）
+2. ✅ タスクメッセージ機能（新規API）
+3. ✅ 個別タスク実行制御（新規API）
+4. ✅ タスク承認・差し戻し機能（新規API）
+
+### 中優先度（UX向上に必要）
+1. ✅ クエリ分解チャット機能（新規API）
+2. ✅ ワークフロー生成機能（新規API）
+3. ✅ リアルタイム更新（WebSocket）
+
+### 低優先度（将来的な拡張）
+1. ✅ 高度な分析・レポート機能
+2. ✅ ユーザー管理・認証機能
+3. ✅ カスタムエージェント作成機能
+
+新しいUIを完全に機能させるためには、約60%の新規API実装と40%の既存API改修が必要です。
+
+## フロントエンドUI操作とAPI呼び出しマッピング
+
+### 画面構成とAPI連携
+
+新しいUI（frontend_new）は以下の3カラム構成となっており、各領域での操作に対応するAPIを説明します：
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 上部ヘッダー - 進捗表示・フローチャート                           │
+├─────────────┬─────────────────────────┬─────────────────────────┤
+│   左サイドバー   │       中央カラム          │       右カラム          │
+│             │                      │                      │
+│ ワークフロー     │   タスク一覧            │   タスク詳細チャット      │
+│ クエリ分解      │   (フェーズ内タスク)      │   メッセージ履歴        │
+│             │                      │                      │
+└─────────────┴─────────────────────────┴─────────────────────────┘
+```
+
+### 1. 左サイドバー操作
+
+#### 1.1 ワークフロータブ
+**UI要素**: フェーズカード（`<Card>` コンポーネント）
+**操作**: フェーズカードのクリック
+**API呼び出し**: 
+- `GET /api/sessions/{session_id}/phases` - フェーズ一覧の初期表示
+- `GET /api/tasks/status/{session_id}` - フェーズ選択時のタスク一覧取得
+
+**トリガー**: 
+```typescript
+onClick={() => {
+  setSelectedPhase(phase.id)
+  setCurrentView("center")
+}}
+```
+
+#### 1.2 クエリ分解タブ
+**UI要素**: チャット入力フィールド + 送信ボタン
+**操作**: メッセージ入力後のEnterキーまたは送信ボタンクリック
+**API呼び出し**:
+- `POST /api/query/decompose` - ユーザーの質問を分解・分析
+
+**トリガー**:
+```typescript
+const handleSendQueryMessage = () => {
+  // POST /api/query/decompose 呼び出し
+}
+```
+
+**UI要素**: 「ワークフローを生成」ボタン
+**操作**: ボタンクリック
+**API呼び出し**:
+- `POST /api/workflows/generate` - クエリ履歴からワークフロー生成
+
+### 2. 中央カラム操作
+
+#### 2.1 タスクカード表示
+**UI要素**: タスクカード一覧
+**操作**: 画面初期表示・フェーズ変更時
+**API呼び出し**:
+- `GET /api/tasks/status/{session_id}` - タスク状況の取得
+
+#### 2.2 タスク承認・制御ボタン
+**UI要素**: 「承認」ボタン（緑色、CheckCircleアイコン）
+**表示条件**: `task.status === "ai_completed"`
+**操作**: ボタンクリック
+**API呼び出し**:
+- `PUT /api/tasks/{task_id}/approve` - タスクの承認
+
+**トリガー**:
+```typescript
+onClick={(e) => {
+  e.stopPropagation()
+  handleTaskAction(task.id, "approve")
+}}
+```
+
+**UI要素**: 「やり直し」ボタン（グレー、RefreshCwアイコン）
+**表示条件**: `task.status === "ai_completed"`
+**操作**: ボタンクリック
+**API呼び出し**:
+- `POST /api/tasks/{task_id}/retry` - タスクの再実行
+
+**UI要素**: 「差し戻し」ボタン（グレー、RotateCcwアイコン）
+**表示条件**: `task.status === "waiting_approval" && task.assignee === "user"`
+**操作**: ボタンクリック
+**API呼び出し**:
+- `PUT /api/tasks/{task_id}/approve` (action: "reject") - タスクの差し戻し
+
+#### 2.3 タスクカード選択
+**UI要素**: タスクカード全体
+**操作**: カードクリック
+**API呼び出し**:
+- なし（ローカル状態変更のみ）
+
+**トリガー**:
+```typescript
+onClick={() => {
+  setSelectedTask(task.id)
+  setCurrentView("right")
+}}
+```
+
+### 3. 右カラム操作
+
+#### 3.1 メッセージ送信
+**UI要素**: メッセージ入力フィールド + 送信ボタン（Sendアイコン）
+**操作**: メッセージ入力後のEnterキーまたは送信ボタンクリック
+**API呼び出し**:
+- `POST /api/tasks/{task_id}/messages` - タスクにメッセージ追加
+
+**トリガー**:
+```typescript
+const handleSendMessage = (taskId: string) => {
+  // POST /api/tasks/{task_id}/messages 呼び出し
+}
+```
+
+#### 3.2 メッセージ編集
+**UI要素**: 編集ボタン（Edit3アイコン）
+**操作**: ボタンクリック → テキストエリア表示 → 保存ボタンクリック
+**API呼び出し**:
+- `PUT /api/tasks/{task_id}/messages/{message_id}` - メッセージ内容の更新
+
+**トリガー**:
+```typescript
+// 編集開始
+onClick={() => handleMessageAction(selectedTaskData.id, message.id, "edit")}
+
+// 保存
+onClick={() => handleMessageAction(selectedTaskData.id, message.id, "save")}
+```
+
+#### 3.3 メッセージアクション
+**UI要素**: コピーボタン（Copyアイコン）、再生成ボタン（RefreshCwアイコン）、評価ボタン（ThumbsUp/Down）
+**操作**: 各ボタンクリック
+**API呼び出し**:
+- コピー: なし（クリップボードAPI使用）
+- 再生成: `POST /api/tasks/{task_id}/messages` - AI応答の再生成
+- 評価: 将来実装予定（フィードバックAPI）
+
+### 4. 上部ヘッダー操作
+
+#### 4.1 フローチャート表示
+**UI要素**: フローチャートボタン（Workflowアイコン）
+**操作**: ボタンクリック
+**API呼び出し**:
+- なし（既に取得済みのタスクデータからMermaid図生成）
+
+**トリガー**:
+```typescript
+<Button variant="outline" size="sm" onClick={() => setShowFlowchart(true)}>
+  <Workflow className="h-4 w-4" />
+</Button>
+```
+
+### 5. 自動更新・リアルタイム機能
+
+#### 5.1 WebSocket接続
+**動作**: 画面表示中の自動接続
+**API呼び出し**:
+- `WebSocket /ws/sessions/{session_id}/realtime` - リアルタイム状態更新
+
+#### 5.2 定期的な状態更新
+**動作**: タスク実行中の定期ポーリング
+**API呼び出し**:
+- `GET /api/tasks/status/{session_id}` - 3秒間隔での状態確認
+
+### 6. 初期化・セッション管理
+
+#### 6.1 アプリケーション起動時
+**動作**: ページ読み込み時
+**API呼び出し**:
+- `POST /api/sessions` - 新規セッション作成
+- `GET /api/agents` - 利用可能エージェント一覧取得
+
+#### 6.2 セッション削除
+**動作**: ページ離脱時・明示的な削除時
+**API呼び出し**:
+- `DELETE /api/sessions/{session_id}` - セッションのクリーンアップ
+
+### API呼び出し頻度・パフォーマンス考慮事項
+
+#### 高頻度呼び出し
+- `GET /api/tasks/status/{session_id}`: 3秒間隔（リアルタイム更新中）
+- `WebSocket接続`: 常時接続（実装後）
+
+#### 中頻度呼び出し
+- `POST /api/tasks/{task_id}/messages`: ユーザーのメッセージ送信時
+- `PUT /api/tasks/{task_id}/approve`: タスク承認・差し戻し時
+
+#### 低頻度呼び出し
+- `POST /api/sessions`: アプリケーション起動時のみ
+- `GET /api/agents`: アプリケーション起動時のみ
+- `POST /api/query/decompose`: ユーザーのクエリ入力時のみ
+
+### エラーハンドリング・UX配慮
+
+#### ローディング状態
+- API呼び出し中はボタンの`disabled`状態で視覚的フィードバック
+- 長時間処理の場合はスピナー表示
+
+#### エラー表示
+- API エラー時は適切なエラーメッセージを表示
+- ネットワークエラー時は再試行ボタンを提供
+
+#### 楽観的UI更新
+- ユーザー操作の即座な反映（サーバー応答前の仮更新）
+- サーバー応答後の状態同期
