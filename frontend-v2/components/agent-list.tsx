@@ -16,8 +16,6 @@ import {
   ArrowUp,
   ArrowDown,
   MoreVertical,
-  ChevronDown,
-  BookTemplate,
   MessageSquare
 } from "lucide-react"
 import type { AgentInfo } from "@/types/agent"
@@ -28,8 +26,6 @@ interface AgentListProps {
   onSelectAgent: (agentId: string) => void
   onExecuteAgent: (agentId: string) => void
   onCreateAgent: () => void
-  onCreateFromScratch?: () => void
-  hasTemplates?: boolean
   getMessageCount?: (agentId: string) => number
 }
 
@@ -39,11 +35,8 @@ export function AgentList({
   onSelectAgent,
   onExecuteAgent,
   onCreateAgent,
-  onCreateFromScratch,
-  hasTemplates = false,
   getMessageCount,
 }: AgentListProps) {
-  const [showCreateMenu, setShowCreateMenu] = React.useState(false)
   const getStatusColor = (status: AgentInfo["status"]) => {
     switch (status) {
       case "todo":
@@ -219,57 +212,14 @@ export function AgentList({
               {agents.length}
             </Badge>
           </div>
-          {hasTemplates ? (
-            <div className="relative">
-              <Button
-                onClick={() => setShowCreateMenu(!showCreateMenu)}
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Target className="h-4 w-4 mr-1" />
-                新規作成
-                <ChevronDown className="h-3 w-3 ml-1" />
-              </Button>
-              
-              {showCreateMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-10">
-                  <div className="py-1">
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        onCreateAgent()
-                        setShowCreateMenu(false)
-                      }}
-                      className="w-full justify-start px-3 py-2 text-sm hover:bg-slate-50"
-                    >
-                      <BookTemplate className="h-4 w-4 mr-2" />
-                      テンプレートから作成
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        onCreateFromScratch?.()
-                        setShowCreateMenu(false)
-                      }}
-                      className="w-full justify-start px-3 py-2 text-sm hover:bg-slate-50"
-                    >
-                      <Target className="h-4 w-4 mr-2" />
-                      ゼロから作成
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Button
-              onClick={onCreateAgent}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Target className="h-4 w-4 mr-1" />
-              新規作成
-            </Button>
-          )}
+          <Button
+            onClick={onCreateAgent}
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Target className="h-4 w-4 mr-1" />
+            テンプレート選択
+          </Button>
         </div>
       </div>
 

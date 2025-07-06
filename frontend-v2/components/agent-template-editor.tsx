@@ -22,21 +22,19 @@ import {
 import type { DataUnitCategory, ExecutionEngine, AgentTemplate } from "@/types/agent"
 
 
-interface AgentTemplateCreatorProps {
+interface AgentTemplateEditorProps {
   isOpen: boolean
   onClose: () => void
   onSaveTemplate: (template: Omit<AgentTemplate, 'template_id' | 'created_at' | 'updated_at' | 'usage_count'>) => void
-  onCreateAgent: (template: AgentTemplate) => void
-  editingTemplate?: AgentTemplate | null
+  editingTemplate: AgentTemplate
 }
 
-export function AgentTemplateCreator({
+export function AgentTemplateEditor({
   isOpen,
   onClose,
   onSaveTemplate,
-  onCreateAgent,
   editingTemplate,
-}: AgentTemplateCreatorProps) {
+}: AgentTemplateEditorProps) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -132,39 +130,6 @@ export function AgentTemplateCreator({
     }
   }
 
-  const handleCreateAgent = (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!formData.name || !formData.delegation_type || !formData.purpose_category || formData.context_categories.length === 0) {
-      console.error("テンプレート名、委任タイプ、目的、コンテキストは必須項目です")
-      return
-    }
-
-    const filteredContexts = formData.context_categories.filter(context => context.trim() !== "")
-    
-    try {
-      const parameters = JSON.parse(formData.parameters)
-      const template: AgentTemplate = {
-        template_id: `temp_${Date.now()}`,
-        name: formData.name,
-        description: formData.description,
-        delegation_type: formData.delegation_type,
-        purpose_category: formData.purpose_category,
-        context_categories: filteredContexts,
-        execution_engine: formData.execution_engine,
-        parameters,
-        created_at: new Date(),
-        updated_at: new Date(),
-        usage_count: 0,
-      }
-
-      onCreateAgent(template)
-      handleClose()
-    } catch (error) {
-      console.error("パラメータのJSON形式が正しくありません")
-    }
-  }
-
   // Sample delegation types for suggestions
   const commonDelegationTypes = [
     "データ分析",
@@ -185,7 +150,7 @@ export function AgentTemplateCreator({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Target className="h-5 w-5" />
-            {editingTemplate ? "エージェントテンプレート編集" : "新しいエージェントテンプレート作成"}
+            エージェントテンプレート編集
           </DialogTitle>
         </DialogHeader>
 
@@ -415,14 +380,6 @@ export function AgentTemplateCreator({
               >
                 <Save className="h-4 w-4 mr-2" />
                 テンプレートを保存
-              </Button>
-              <Button 
-                type="button"
-                onClick={handleCreateAgent}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-              >
-                <Target className="h-4 w-4 mr-2" />
-                エージェントを作成
               </Button>
               <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
                 キャンセル

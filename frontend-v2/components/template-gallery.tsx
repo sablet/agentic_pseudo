@@ -265,7 +265,7 @@ export function TemplateGallery({
               className="flex-1 bg-blue-600 hover:bg-blue-700"
             >
               <Target className="h-4 w-4 mr-2" />
-              このテンプレートからエージェントを作成
+              このテンプレートを選択
             </Button>
             <Button variant="outline" onClick={onClose} className="flex-1">
               キャンセル

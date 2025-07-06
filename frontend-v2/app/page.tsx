@@ -4,8 +4,8 @@ import { useState } from "react"
 import { useAgentManager } from "@/hooks/useAgentManager"
 import { AgentList } from "@/components/agent-list"
 import { AgentConversation } from "@/components/agent-conversation"
-import { AgentTemplateCreator } from "@/components/agent-template-creator"
 import { AgentInfoPanel } from "@/components/agent-info-panel"
+import { AgentTemplateEditor } from "@/components/agent-template-editor"
 import { DataUnitManager } from "@/components/data-unit-manager"
 import { TemplateGallery } from "@/components/template-gallery"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,6 @@ export default function AgentCommunicationSystem() {
   const {
     agents,
     createAgent,
-    createAgentFromTemplate,
     executeAgent,
     completeAgent,
     fetchAgentMetaInfo,
@@ -29,12 +28,12 @@ export default function AgentCommunicationSystem() {
   } = useAgentManager()
   
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
-  const [isTemplateCreatorOpen, setIsTemplateCreatorOpen] = useState(false)
   const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false)
   const [isDataUnitManagerOpen, setIsDataUnitManagerOpen] = useState(false)
   const [conversationHistory, setConversationHistory] = useState<ConversationMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<any>(null)
+  const [isTemplateCreatorOpen, setIsTemplateCreatorOpen] = useState(false)
 
   const selectedAgent = selectedAgentId 
     ? agents.find((agent) => agent.agent_id === selectedAgentId) || null
@@ -183,42 +182,37 @@ export default function AgentCommunicationSystem() {
   }
 
   const handleCreateAgent = () => {
-    if (templates.length > 0) {
-      setIsTemplateGalleryOpen(true)
-    } else {
-      setIsTemplateCreatorOpen(true)
-    }
-  }
-
-  const handleCreateFromScratch = () => {
-    setIsTemplateCreatorOpen(true)
-  }
-
-  const handleSaveTemplate = (template: any) => {
-    const savedTemplate = saveTemplate(template)
-    console.log("Template saved:", savedTemplate)
-  }
-
-  const handleCreateAgentFromTemplate = (template: any) => {
-    const newAgent = createAgentFromTemplate(template)
-    console.log("Agent created from template:", newAgent)
+    setIsTemplateGalleryOpen(true)
   }
 
   const handleSelectTemplate = (template: any) => {
-    const newAgent = createAgentFromTemplate(template)
-    console.log("Agent created from selected template:", newAgent)
+    // テンプレートからエージェント作成機能は削除
+    console.log("Template selection is no longer supported")
     setIsTemplateGalleryOpen(false)
   }
 
   const handleEditTemplate = (template: any) => {
     setEditingTemplate(template)
     setIsTemplateCreatorOpen(true)
+    setIsTemplateGalleryOpen(false)
     console.log("Edit template:", template)
   }
 
   const handleDeleteTemplate = (templateId: string) => {
     if (confirm("このテンプレートを削除しますか？")) {
       deleteTemplate(templateId)
+    }
+  }
+
+  const handleSaveTemplate = (template: any) => {
+    if (editingTemplate) {
+      // 編集モード
+      updateTemplate(editingTemplate.template_id, template)
+      console.log("Template updated:", template)
+    } else {
+      // 新規作成モード（現在は使用されない）
+      const savedTemplate = saveTemplate(template)
+      console.log("Template saved:", savedTemplate)
     }
   }
 
@@ -321,8 +315,6 @@ export default function AgentCommunicationSystem() {
             onSelectAgent={handleSelectAgent}
             onExecuteAgent={handleExecuteAgent}
             onCreateAgent={handleCreateAgent}
-            onCreateFromScratch={handleCreateFromScratch}
-            hasTemplates={templates.length > 0}
           />
         </div>
 
@@ -347,17 +339,6 @@ export default function AgentCommunicationSystem() {
         </div>
       </div>
 
-      <AgentTemplateCreator
-        isOpen={isTemplateCreatorOpen}
-        onClose={() => {
-          setIsTemplateCreatorOpen(false)
-          setEditingTemplate(null)
-        }}
-        onSaveTemplate={handleSaveTemplate}
-        onCreateAgent={handleCreateAgentFromTemplate}
-        editingTemplate={editingTemplate}
-      />
-
       <TemplateGallery
         isOpen={isTemplateGalleryOpen}
         onClose={() => setIsTemplateGalleryOpen(false)}
@@ -366,6 +347,18 @@ export default function AgentCommunicationSystem() {
         onDeleteTemplate={handleDeleteTemplate}
         onEditTemplate={handleEditTemplate}
       />
+
+      {editingTemplate && (
+        <AgentTemplateEditor
+          isOpen={isTemplateCreatorOpen}
+          onClose={() => {
+            setIsTemplateCreatorOpen(false)
+            setEditingTemplate(null)
+          }}
+          onSaveTemplate={handleSaveTemplate}
+          editingTemplate={editingTemplate}
+        />
+      )}
 
       {isDataUnitManagerOpen && (
         <DataUnitManager

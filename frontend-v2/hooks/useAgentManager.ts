@@ -251,27 +251,6 @@ export function useAgentManager() {
     [generateAgentId, agents],
   )
 
-  const createAgentFromTemplate = useCallback(
-    (template: AgentTemplate, customPurpose?: DataUnitValue, customContext?: DataUnitValue[]) => {
-      // Convert categories to specific values if not provided
-      const purpose = customPurpose || `Generated purpose for ${template.purpose_category}`
-      const context = customContext || template.context_categories.map(cat => `Generated context for ${cat}`)
-
-      // Increment usage count
-      setTemplates(prev => {
-        const updated = prev.map(t => 
-          t.template_id === template.template_id 
-            ? { ...t, usage_count: t.usage_count + 1, updated_at: new Date() }
-            : t
-        )
-        saveTemplatesToStorage(updated)
-        return updated
-      })
-
-      return createAgentWithTemplate(purpose, template, context, null, template.parameters)
-    },
-    [createAgentWithTemplate, saveTemplatesToStorage],
-  )
 
   const saveTemplate = useCallback(
     (templateData: Omit<AgentTemplate, 'template_id' | 'created_at' | 'updated_at' | 'usage_count'>) => {
@@ -655,7 +634,6 @@ export function useAgentManager() {
   return {
     agents,
     createAgent,
-    createAgentFromTemplate,
     updateAgentStatus,
     executeAgent,
     completeAgent,
