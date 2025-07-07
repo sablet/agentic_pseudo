@@ -120,7 +120,7 @@ class MessageBase(BaseSchema):
 
     conversation_id: int
     content: str = Field(..., min_length=1)
-    role: str = Field(..., regex=r"^(user|assistant|system)$")
+    role: str = Field(..., pattern=r"^(user|assistant|system)$")
     metadata: Optional[Dict[str, Any]] = None
 
 
@@ -179,6 +179,27 @@ class DataUnit(DataUnitBase):
     id: int
     created_at: datetime
     updated_at: datetime
+
+
+# AI Processing schemas
+class AIProcessRequest(BaseSchema):
+    """Schema for AI processing request."""
+
+    message: str = Field(..., min_length=1)
+    system_prompt: Optional[str] = None
+    temperature: float = Field(default=0.7, ge=0.0, le=2.0)
+    max_tokens: Optional[int] = Field(None, gt=0, le=4096)
+    stream: bool = False
+
+
+class AIProcessResponse(BaseSchema):
+    """Schema for AI processing response."""
+
+    content: str
+    provider: str
+    model: str
+    usage: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 # Response schemas

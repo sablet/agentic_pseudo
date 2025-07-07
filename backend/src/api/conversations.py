@@ -1,10 +1,12 @@
 """Conversation API endpoints."""
 
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database import get_db
 from src.service.conversation_service import ConversationService, MessageService
+from src.service.ai_processor import AIProcessor
 from src.models.schemas import (
     Conversation,
     ConversationCreate,
@@ -13,6 +15,8 @@ from src.models.schemas import (
     MessageCreate,
     MessageUpdate,
     ListResponse,
+    AIProcessRequest,
+    AIProcessResponse,
 )
 from src.auth import get_optional_user, TokenData
 
@@ -157,3 +161,76 @@ async def delete_message(
     """Delete a message."""
     service = MessageService(db)
     await service.delete_message(message_id)
+
+
+@router.post("/{conversation_id}/process", response_model=AIProcessResponse)
+async def process_conversation(
+    conversation_id: int,
+    request: AIProcessRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[TokenData] = Depends(get_optional_user),
+):
+    """Process conversation with AI to generate response."""
+    try:
+        # Verify conversation exists
+        conversation_service = ConversationService(db)
+        conversation = await conversation_service.get_conversation(conversation_id)
+
+        # Initialize AI processor
+        ai_processor = AIProcessor(db)
+
+        # Generate AI response
+        response = await ai_processor.process_conversation(
+            conversation_id=conversation_id,
+            user_message=request.message,
+            system_prompt=request.system_prompt,
+            temperature=request.temperature,
+            max_tokens=request.max_tokens,
+        )
+
+        return response
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI processing failed: {str(e)}")
+
+
+@router.post("/{conversation_id}/stream")
+async def stream_conversation(
+    conversation_id: int,
+    request: AIProcessRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[TokenData] = Depends(get_optional_user),
+):
+    """Stream AI response for conversation processing."""
+    try:
+        # Verify conversation exists
+        conversation_service = ConversationService(db)
+        conversation = await conversation_service.get_conversation(conversation_id)
+
+        # Initialize AI processor
+        ai_processor = AIProcessor(db)
+
+        # Generate streaming response
+        async def generate_stream():
+            async for chunk in ai_processor.stream_conversation(
+                conversation_id=conversation_id,
+                user_message=request.message,
+                system_prompt=request.system_prompt,
+                temperature=request.temperature,
+                max_tokens=request.max_tokens,
+            ):
+                yield f"data: {chunk}\n\n"
+            yield "data: [DONE]\n\n"
+
+        return StreamingResponse(
+            generate_stream(),
+            media_type="text/plain",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "Access-Control-Allow-Origin": "*",
+            },
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI streaming failed: {str(e)}")
