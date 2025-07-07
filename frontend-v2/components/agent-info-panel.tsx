@@ -22,10 +22,18 @@ import {
   ArrowUp,
   ArrowDown
 } from "lucide-react"
-import type { AgentMetaInfo, ContextStatus, WaitingInfo } from "@/types/agent"
+import type { AgentMetaInfo, ContextStatus, WaitingInfo, AgentTemplate, DataUnitCategory } from "@/types/agent"
+
+interface DataUnitCategoryInfo {
+  id: DataUnitCategory
+  name: string
+  description?: string
+}
 
 interface AgentInfoPanelProps {
   agentInfo: AgentMetaInfo | null
+  template?: AgentTemplate | null
+  categoryDefinitions?: DataUnitCategoryInfo[] // Real category master data
   onUpdateContext?: (contextId: string, value: any) => void
   onExecuteAgent?: (agentId: string) => void
   onApproveAgent?: (agentId: string) => void
@@ -33,10 +41,44 @@ interface AgentInfoPanelProps {
 
 export function AgentInfoPanel({
   agentInfo,
+  template,
+  categoryDefinitions,
   onUpdateContext,
   onExecuteAgent,
   onApproveAgent,
 }: AgentInfoPanelProps) {
+  // Convert category ID to display name using real data relations
+  const getCategoryDisplayName = (category: DataUnitCategory): string => {
+    // First, try to find in actual category definitions (real data)
+    if (categoryDefinitions) {
+      const categoryInfo = categoryDefinitions.find(def => def.id === category)
+      if (categoryInfo) {
+        return categoryInfo.name
+      }
+    }
+
+    // Fallback to hardcoded mapping for demo purposes
+    const categoryMap: Record<string, string> = {
+      "market_analysis_report": "市場分析レポート",
+      "competitor_comparison_table": "競合比較表",
+      "customer_segment_data": "顧客セグメントデータ",
+      "pricing_strategy_document": "価格戦略文書",
+      "feature_analysis_matrix": "機能分析マトリックス",
+      "market_share_data": "市場シェアデータ",
+      "user_survey_results": "ユーザー調査結果",
+      "financial_projections": "財務予測",
+      "risk_assessment_report": "リスク評価レポート",
+      "technical_specifications": "技術仕様書",
+      "compliance_checklist": "コンプライアンスチェックリスト",
+      "performance_metrics": "パフォーマンス指標",
+      "user_feedback_summary": "ユーザーフィードバック要約",
+      "integration_requirements": "統合要件",
+      "training_materials": "トレーニング資料",
+      "business_requirements_document": "ビジネス要件文書",
+    }
+    return categoryMap[category] || category
+  }
+
   if (!agentInfo) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-slate-50 border-l border-slate-200">
@@ -172,9 +214,30 @@ export function AgentInfoPanel({
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <p className="text-sm text-slate-700 leading-relaxed">
-                {agentInfo.description}
-              </p>
+              <div className="space-y-3">
+                {template && (
+                  <div>
+                    <span className="text-xs text-slate-500">目的カテゴリ → 具体的な目的</span>
+                    <div className="mt-1 p-3 bg-slate-50 rounded-lg">
+                      <div className="text-xs text-slate-600 mb-1">カテゴリ: {getCategoryDisplayName(template.purpose_category)}</div>
+                      <div className="text-sm font-medium text-slate-900">↓</div>
+                      <div className="text-sm text-slate-700">{agentInfo.purpose}</div>
+                    </div>
+                  </div>
+                )}
+                {!template && (
+                  <div>
+                    <span className="text-xs text-slate-500">具体的な目的</span>
+                    <p className="text-sm font-medium text-slate-900">{agentInfo.purpose}</p>
+                  </div>
+                )}
+                <div>
+                  <span className="text-xs text-slate-500">詳細説明</span>
+                  <p className="text-sm text-slate-700 leading-relaxed">
+                    {agentInfo.description}
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -187,6 +250,24 @@ export function AgentInfoPanel({
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
+              {template && template.context_categories.length > 0 && (
+                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                  <span className="text-xs text-slate-500 mb-2 block">コンテキストカテゴリ → 具体的なコンテキスト</span>
+                  <div className="space-y-2">
+                    {template.context_categories.map((category, index) => (
+                      <div key={category} className="text-sm">
+                        <span className="text-slate-600">{getCategoryDisplayName(category)}</span>
+                        <span className="mx-2">→</span>
+                        <span className="text-slate-900">
+                          {agentInfo.context && agentInfo.context[index] 
+                            ? agentInfo.context[index] 
+                            : "未設定"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="space-y-3">
                 {agentInfo.context_status.map((context) => (
                   <div key={context.id} className="border rounded-lg p-3">
