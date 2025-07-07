@@ -10,12 +10,13 @@ import { DataUnitManager } from "@/components/data-unit-manager"
 import { TemplateGallery } from "@/components/template-gallery"
 import { Button } from "@/components/ui/button"
 import { Settings } from "lucide-react"
-import type { AgentMetaInfo, ContextStatus, WaitingInfo, ConversationMessage } from "@/types/agent"
+import type { AgentMetaInfo, ContextStatus, WaitingInfo, ConversationMessage, AgentTemplate } from "@/types/agent"
 
 export default function AgentCommunicationSystem() {
   const {
     agents,
     createAgent,
+    createAgentWithTemplate,
     executeAgent,
     completeAgent,
     fetchAgentMetaInfo,
@@ -25,7 +26,17 @@ export default function AgentCommunicationSystem() {
     updateTemplate,
     deleteTemplate,
     getTemplate,
+    getAgentTemplate,
   } = useAgentManager()
+  
+  // TODO: Add category definitions hook for real data
+  // const { categoryDefinitions } = useCategoryDefinitions()
+  
+  // TODO: Fetch category definitions from backend
+  // const fetchCategoryDefinitions = async (): Promise<DataUnitCategoryInfo[]> => {
+  //   const response = await fetch('/api/data-unit-categories')
+  //   return response.json()
+  // }
   
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
   const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false)
@@ -185,10 +196,26 @@ export default function AgentCommunicationSystem() {
     setIsTemplateGalleryOpen(true)
   }
 
-  const handleSelectTemplate = (template: any) => {
-    // テンプレートからエージェント作成機能は削除
-    console.log("Template selection is no longer supported")
+  const handleSelectTemplate = (template: AgentTemplate, agentName: string) => {
+    // テンプレートの purpose_category を purpose として使用し、
+    // context_categories を context として使用
+    const newAgent = createAgentWithTemplate(
+      agentName, // カスタム名前をpurposeとして使用
+      template,
+      template.context_categories, // template.context_categories を context として使用
+      null, // parent_agent_id (トップレベルエージェント)
+      template.parameters // テンプレートのパラメータ
+    )
+    
+    console.log("Agent created from template:", {
+      agent: newAgent,
+      template: template,
+      name: agentName
+    })
+    
     setIsTemplateGalleryOpen(false)
+    // 新しく作成されたエージェントを選択
+    setSelectedAgentId(newAgent.agent_id)
   }
 
   const handleEditTemplate = (template: any) => {
@@ -220,47 +247,16 @@ export default function AgentCommunicationSystem() {
   const getCurrentAgentInfo = (): AgentMetaInfo | null => {
     if (!selectedAgent) return null
 
-    // Create mock data for demonstration
-    const mockContextStatus: ContextStatus[] = [
-      {
-        id: "ctx_1",
-        name: "入力ファイル",
-        type: "file",
-        required: true,
-        status: "insufficient",
-        description: "処理対象となるCSVファイルをアップロードしてください",
-        current_value: null,
-      },
-      {
-        id: "ctx_2",
-        name: "処理オプション",
-        type: "selection",
-        required: true,
-        status: "sufficient",
-        description: "データ処理の方法を選択してください",
-        current_value: "standard",
-      },
-    ]
-
-    const mockWaitingInfo: WaitingInfo[] = [
-      {
-        type: "context",
-        description: "入力ファイルの選択を待機中",
-        estimated_time: "2分以内",
-      },
-    ]
-
+    // Basic info without mock context data
     return {
       agent_id: selectedAgent.agent_id,
       purpose: selectedAgent.purpose,
-      description: `${selectedAgent.purpose}に関する詳細な処理を実行します。必要なコンテキストを収集し、適切な形式で結果を出力します。`,
+      description: `${selectedAgent.purpose}に関する詳細な処理を実行します。`,
       level: selectedAgent.level,
-      context_status: mockContextStatus,
-      waiting_for: mockWaitingInfo,
+      context_status: [], // Empty - no mock context
+      waiting_for: [],   // Empty - no mock waiting info
       execution_log: [
         "エージェント初期化完了",
-        "必要なコンテキストを分析中...",
-        "入力待機中",
       ],
       conversation_history: conversationHistory,
       parent_agent_summary: selectedAgent.parent_agent_id 
@@ -332,6 +328,8 @@ export default function AgentCommunicationSystem() {
         <div className="w-1/3 min-w-80 border-l border-slate-200">
           <AgentInfoPanel
             agentInfo={getCurrentAgentInfo()}
+            template={selectedAgent ? getAgentTemplate(selectedAgent) : null}
+            categoryDefinitions={undefined} // TODO: Implement real category master data fetching
             onUpdateContext={handleUpdateContext}
             onExecuteAgent={handleExecuteAgent}
             onApproveAgent={(agentId) => console.log("Approve agent:", agentId)}
