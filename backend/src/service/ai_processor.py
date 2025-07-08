@@ -108,7 +108,7 @@ class AIProcessor:
             provider=ai_response.provider.value,
             model=ai_response.model,
             usage=ai_response.usage,
-            message_metadata=ai_response.metadata,
+            metadata=ai_response.metadata,
         )
 
     async def stream_conversation(

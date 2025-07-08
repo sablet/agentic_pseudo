@@ -192,8 +192,11 @@ async def process_conversation(
 
         return response
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"AI processing failed: {str(e)}")
+        logger.error(f"AI processing failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="AI processing failed.")
 
 
 @router.post("/{conversation_id}/stream")
@@ -234,5 +237,8 @@ async def stream_conversation(
             },
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"AI streaming failed: {str(e)}")
+        logger.error(f"AI streaming failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="AI streaming failed.")

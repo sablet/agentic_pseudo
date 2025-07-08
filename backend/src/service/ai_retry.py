@@ -64,12 +64,7 @@ class AIRetryHandler:
         if isinstance(error, AIEngineError):
             return True
 
-        # For testing: retry on basic Exception if not specifically an AI engine error
-        # In production, you may want to be more restrictive
-        if isinstance(error, Exception) and not isinstance(error, (AIEngineQuotaError, AIEngineConnectionError, AIEngineValidationError)):
-            return True
-
-        # Don't retry on other types of errors
+        # Don't retry on other types of errors (non-AI engine related)
         return False
 
     def calculate_delay(self, attempt: int) -> float:
