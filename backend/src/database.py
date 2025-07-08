@@ -1,10 +1,11 @@
 """Database configuration and connection management for PostgreSQL."""
 
 import os
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -12,7 +13,20 @@ load_dotenv()
 DATABASE_URL = os.getenv(
     "DATABASE_URL", "postgresql://user:password@localhost:5432/agentic_pseudo"
 )
-ASYNC_DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+
+# Handle different database URL formats for async
+if DATABASE_URL.startswith("sqlite"):
+    # For SQLite, ensure aiosqlite driver is used
+    if "aiosqlite" not in DATABASE_URL:
+        ASYNC_DATABASE_URL = DATABASE_URL.replace("sqlite://", "sqlite+aiosqlite://")
+    else:
+        ASYNC_DATABASE_URL = DATABASE_URL
+elif DATABASE_URL.startswith("postgresql"):
+    # For PostgreSQL, use asyncpg driver
+    ASYNC_DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+else:
+    # Default case
+    ASYNC_DATABASE_URL = DATABASE_URL
 
 # Create engines
 engine = create_engine(DATABASE_URL)

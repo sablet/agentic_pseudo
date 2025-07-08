@@ -1,16 +1,15 @@
 """AI processor service for handling conversation processing with AI engines."""
 
-import json
 import logging
-from typing import Optional, AsyncGenerator
+from typing import AsyncGenerator, Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .ai_engine import AIContext, AIMessage, AIProvider
-from .gemini_engine import GeminiEngine
-from .ai_retry import AIRetryHandler, QUOTA_AWARE_RETRY
-from .conversation_service import ConversationService, MessageService
 from ..models.schemas import AIProcessResponse, MessageCreate
-from ..exceptions import ValidationError, NotFoundError
+from .ai_engine import AIContext, AIMessage, AIProvider
+from .ai_retry import QUOTA_AWARE_RETRY, AIRetryHandler
+from .conversation_service import ConversationService, MessageService
+from .gemini_engine import GeminiEngine
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +52,7 @@ class AIProcessor:
         ai_messages = []
         for msg in messages:
             ai_messages.append(
-                AIMessage(role=msg.role, content=msg.content, metadata=msg.metadata)
+                AIMessage(role=msg.role, content=msg.content, metadata=msg.message_metadata)
             )
 
         # Add current user message
@@ -109,7 +108,7 @@ class AIProcessor:
             provider=ai_response.provider.value,
             model=ai_response.model,
             usage=ai_response.usage,
-            metadata=ai_response.metadata,
+            message_metadata=ai_response.metadata,
         )
 
     async def stream_conversation(
@@ -135,7 +134,7 @@ class AIProcessor:
         ai_messages = []
         for msg in messages:
             ai_messages.append(
-                AIMessage(role=msg.role, content=msg.content, metadata=msg.metadata)
+                AIMessage(role=msg.role, content=msg.content, metadata=msg.message_metadata)
             )
 
         # Add current user message

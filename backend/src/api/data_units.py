@@ -1,12 +1,14 @@
 """Data unit API endpoints."""
 
-from typing import List, Optional
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.auth import TokenData, get_optional_user
 from src.database import get_db
-from src.service.data_unit_service import DataUnitService
 from src.models.schemas import DataUnit, DataUnitCreate, DataUnitUpdate, ListResponse
-from src.auth import get_optional_user, TokenData
+from src.service.data_unit_service import DataUnitService
 
 router = APIRouter(prefix="/data-units", tags=["data-units"])
 

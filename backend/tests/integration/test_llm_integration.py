@@ -1,16 +1,14 @@
-import pytest
-import os
 
-from src.service.planner_agent import PlannerAgent
-from src.repository.kvs_repository import KVSRepository
+import pytest
+
 from src.models.task_models import (
-    TaskData,
-    TaskSchemas,
+    AgentType,
     DailyTaskSchema,
     InfoReferenceSchema,
-    AgentType,
     ReferenceType,
 )
+from src.repository.kvs_repository import KVSRepository
+from src.service.planner_agent import PlannerAgent
 
 
 class TestLLMIntegration:

@@ -1,9 +1,12 @@
 """Conversation service layer."""
 
 from typing import List, Optional
+
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
 from sqlalchemy.orm import selectinload
+
+from src.exceptions import not_found_exception
 from src.models.database_models import Conversation, Message
 from src.models.schemas import (
     ConversationCreate,
@@ -11,7 +14,6 @@ from src.models.schemas import (
     MessageCreate,
     MessageUpdate,
 )
-from src.exceptions import not_found_exception
 
 
 class ConversationService:

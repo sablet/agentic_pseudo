@@ -1,24 +1,26 @@
 """Conversation API endpoints."""
 
-from typing import List, Optional
-from fastapi import APIRouter, Depends, Query, HTTPException
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.auth import TokenData, get_optional_user
 from src.database import get_db
-from src.service.conversation_service import ConversationService, MessageService
-from src.service.ai_processor import AIProcessor
 from src.models.schemas import (
+    AIProcessRequest,
+    AIProcessResponse,
     Conversation,
     ConversationCreate,
     ConversationUpdate,
+    ListResponse,
     Message,
     MessageCreate,
     MessageUpdate,
-    ListResponse,
-    AIProcessRequest,
-    AIProcessResponse,
 )
-from src.auth import get_optional_user, TokenData
+from src.service.ai_processor import AIProcessor
+from src.service.conversation_service import ConversationService, MessageService
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 

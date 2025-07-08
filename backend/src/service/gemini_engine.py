@@ -1,31 +1,33 @@
 """Gemini AI engine implementation."""
 
-import os
 import asyncio
-from typing import AsyncGenerator, Optional, Dict, Any
+import os
+from typing import AsyncGenerator, Optional
+
 import google.generativeai as genai
 from google.generativeai.types import GenerateContentResponse
 
 from .ai_engine import (
-    AIEngineInterface,
-    AIProvider,
     AIContext,
-    AIResponse,
-    AIMessage,
-    AIEngineError,
     AIEngineConnectionError,
+    AIEngineError,
+    AIEngineInterface,
     AIEngineQuotaError,
     AIEngineValidationError,
+    AIMessage,
+    AIProvider,
+    AIResponse,
 )
+from .gemini_constants import GeminiConfig, GeminiModels
 
 
 class GeminiEngine(AIEngineInterface):
     """Gemini AI engine implementation."""
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-1.5-flash"):
+    def __init__(self, api_key: Optional[str] = None, model: str = GeminiModels.DEFAULT_MODEL):
         # Get API key from environment if not provided
         if api_key is None:
-            api_key = os.getenv("GEMINI_API_KEY")
+            api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
 
         if not api_key:
             raise AIEngineValidationError(
@@ -69,7 +71,7 @@ class GeminiEngine(AIEngineInterface):
 
             # Configure generation parameters
             generation_config = {
-                "temperature": context.temperature,
+                "temperature": context.temperature if context.temperature is not None else GeminiConfig.DEFAULT_TEMPERATURE,
             }
 
             if context.max_tokens:
@@ -155,7 +157,7 @@ class GeminiEngine(AIEngineInterface):
 
             # Configure generation parameters
             generation_config = {
-                "temperature": context.temperature,
+                "temperature": context.temperature if context.temperature is not None else GeminiConfig.DEFAULT_TEMPERATURE,
             }
 
             if context.max_tokens:
@@ -171,8 +173,13 @@ class GeminiEngine(AIEngineInterface):
 
             # Yield content chunks
             for chunk in response_stream:
-                if chunk.text:
-                    yield chunk.text
+                try:
+                    if chunk.text:
+                        yield chunk.text
+                except Exception:
+                    # Handle cases where chunk.text is not available (e.g., finish_reason = MAX_TOKENS)
+                    # Skip chunks that don't have text content
+                    continue
 
         except Exception as e:
             # Handle specific Gemini errors
@@ -203,7 +210,7 @@ class GeminiEngine(AIEngineInterface):
             # Simple test generation to validate connection
             test_context = AIContext(
                 messages=[AIMessage(role="user", content="Hello")],
-                temperature=0.1,
+                temperature=GeminiConfig.DEFAULT_TEMPERATURE,
                 max_tokens=10,
             )
 
@@ -212,5 +219,12 @@ class GeminiEngine(AIEngineInterface):
 
         except AIEngineConnectionError:
             return False
-        except Exception:
+        except AIEngineQuotaError:
+            # If we get a quota error, the connection itself is valid
+            return True
+        except Exception as e:
+            # Check if it's a rate limit or quota issue
+            error_str = str(e).lower()
+            if "quota" in error_str or "rate" in error_str:
+                return True
             return False

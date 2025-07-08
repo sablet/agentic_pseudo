@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional
-import httpx
-import json
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import httpx
 
 
 class BaseAgent(ABC):

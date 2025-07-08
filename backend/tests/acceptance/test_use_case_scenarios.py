@@ -1,20 +1,15 @@
-import pytest
-import json
-import os
-from datetime import datetime
 
-from src.service.planner_agent import PlannerAgent
-from src.service.llm_agents import LLMConfig
-from src.repository.kvs_repository import KVSRepository
+import pytest
+
 from src.models.task_models import (
-    TaskData,
-    TaskSchemas,
+    AgentType,
     DailyTaskSchema,
     InfoReferenceSchema,
-    TaskStatus,
-    AgentType,
-    ReferenceType,
+    TaskData,
+    TaskSchemas,
 )
+from src.repository.kvs_repository import KVSRepository
+from src.service.planner_agent import PlannerAgent
 
 
 class TestUseCaseScenarios:

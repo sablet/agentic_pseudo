@@ -1,18 +1,19 @@
 """Database models for the agentic pseudo system."""
 
 from datetime import datetime
-from typing import Optional
+
 from sqlalchemy import (
+    JSON,
+    Boolean,
     Column,
+    DateTime,
+    ForeignKey,
     Integer,
     String,
-    DateTime,
     Text,
-    Boolean,
-    ForeignKey,
-    JSON,
 )
 from sqlalchemy.orm import relationship
+
 from src.database import Base
 
 
@@ -80,7 +81,7 @@ class Message(Base):
     conversation_id = Column(Integer, ForeignKey("conversations.id"))
     content = Column(Text, nullable=False)
     role = Column(String(50), nullable=False)  # user, assistant, system
-    metadata = Column(JSON)
+    message_metadata = Column(JSON)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships

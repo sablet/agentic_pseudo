@@ -1,10 +1,9 @@
-import pytest
-import asyncio
-import os
 
-from src.service.planner_agent import PlannerAgent
+import pytest
+
+from src.models.task_models import AgentType, TaskData, TaskSchemas
 from src.repository.kvs_repository import KVSRepository
-from src.models.task_models import TaskData, TaskSchemas, TaskStatus, AgentType
+from src.service.planner_agent import PlannerAgent
 
 
 class TestTaskWorkflow:

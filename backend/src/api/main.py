@@ -1,19 +1,19 @@
-from fastapi import FastAPI, HTTPException, Response
+import uuid
+from typing import Any, Dict, Optional
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
-import uuid
-import json
 
-from src.service.planner_agent import PlannerAgent
-from src.service.sub_agents import AgentManager
-from src.repository.kvs_repository import KVSRepository
-from src.models.task_models import TaskData, TaskSchemas
-from src.database import init_db
 from src.api.agents import router as agents_router
-from src.api.templates import router as templates_router
 from src.api.conversations import router as conversations_router
 from src.api.data_units import router as data_units_router
+from src.api.templates import router as templates_router
+from src.database import init_db
+from src.models.task_models import TaskData
+from src.repository.kvs_repository import KVSRepository
+from src.service.planner_agent import PlannerAgent
+from src.service.sub_agents import AgentManager
 
 app = FastAPI(title="Agentic Task Management System", version="0.1.0")
 

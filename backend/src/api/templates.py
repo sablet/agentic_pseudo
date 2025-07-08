@@ -1,12 +1,14 @@
 """Template API endpoints."""
 
-from typing import List, Optional
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.auth import TokenData, get_optional_user
 from src.database import get_db
+from src.models.schemas import ListResponse, Template, TemplateCreate, TemplateUpdate
 from src.service.template_service import TemplateService
-from src.models.schemas import Template, TemplateCreate, TemplateUpdate, ListResponse
-from src.auth import get_optional_user, TokenData
 
 router = APIRouter(prefix="/templates", tags=["templates"])
 

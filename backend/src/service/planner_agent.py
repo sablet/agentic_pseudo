@@ -1,17 +1,16 @@
 import json
 import uuid
-from typing import List, Dict, Any, Optional
-from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from src.models.task_models import (
-    TaskPlan,
-    TaskData,
-    TaskSchemas,
+    AgentType,
     DailyTaskSchema,
     InfoReferenceSchema,
-    TaskStatus,
-    AgentType,
     ReferenceType,
+    TaskData,
+    TaskPlan,
+    TaskSchemas,
+    TaskStatus,
 )
 from src.repository.kvs_repository import KVSRepository
 from src.service.llm_agents import LLMAgentManager
@@ -71,7 +70,7 @@ class PlannerAgent:
                 daily_task = DailyTaskSchema(
                     id=f"task_{uuid.uuid4().hex[:8]}",
                     agent=AgentType.CASUAL,
-                    task=f"レポートのドラフト作成",
+                    task="レポートのドラフト作成",
                     need=[info_task.id],
                     tags=["レポート"],
                 )
@@ -104,7 +103,7 @@ class PlannerAgent:
             report_task = DailyTaskSchema(
                 id=f"task_{uuid.uuid4().hex[:8]}",
                 agent=AgentType.CASUAL,
-                task=f"分析結果レポート作成",
+                task="分析結果レポート作成",
                 need=[data_task.id],
                 tags=["レポート", "分析"],
             )
@@ -129,7 +128,7 @@ class PlannerAgent:
             planning_task = DailyTaskSchema(
                 id=f"task_{uuid.uuid4().hex[:8]}",
                 agent=AgentType.CASUAL,
-                task=f"企画・設計ドキュメント作成",
+                task="企画・設計ドキュメント作成",
                 need=[research_task.id],
                 tags=["企画", "設計"],
             )

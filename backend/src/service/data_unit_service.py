@@ -1,11 +1,13 @@
 """Data unit service layer."""
 
 from typing import List, Optional
+
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
+
+from src.exceptions import not_found_exception
 from src.models.database_models import DataUnit
 from src.models.schemas import DataUnitCreate, DataUnitUpdate
-from src.exceptions import not_found_exception
 
 
 class DataUnitService:

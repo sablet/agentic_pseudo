@@ -1,9 +1,8 @@
+
 import pytest
 from fastapi.testclient import TestClient
-import json
 
 from src.api.main import app
-from src.models.task_models import TaskData, TaskSchemas, UserSession
 
 
 class TestAPIIntegration:

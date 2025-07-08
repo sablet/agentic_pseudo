@@ -1,11 +1,13 @@
-import os
 import json
+import os
 import re
-import dspy
-from typing import Dict, Any, Optional, List
 from datetime import datetime
+from typing import Any, Dict, Optional
+
+import dspy
 from dotenv import load_dotenv
 
+from .gemini_constants import GeminiConfig
 from .sub_agents import BaseAgent
 
 
@@ -29,8 +31,8 @@ class LLMConfig:
     def configure_gemini():
         load_dotenv(os.path.expanduser(".env"))
         gemini = dspy.LM(
-            model="gemini/gemini-2.5-flash",
-            temperature=0.0,
+            model=GeminiConfig.get_dspy_model_name(),
+            temperature=GeminiConfig.DEFAULT_TEMPERATURE,
             max_tokens=10000,
             num_retries=3,
             cache=True,

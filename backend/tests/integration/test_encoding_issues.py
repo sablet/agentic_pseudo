@@ -3,9 +3,9 @@
 日本語テキストの文字化けや不正なUnicodeエスケープを検出する
 """
 
-import pytest
-import json
 import re
+
+import pytest
 from fastapi.testclient import TestClient
 
 from src.api.main import app
@@ -157,7 +157,7 @@ class TestEncodingIssues:
             assert isinstance(task_name, str), (
                 f"タスク名が文字列ではありません: {type(task_name)}"
             )
-            assert len(task_name) > 0, f"タスク名が空です"
+            assert len(task_name) > 0, "タスク名が空です"
 
             # 文字化けパターンの検出
             corrupted_patterns = [

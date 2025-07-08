@@ -1,9 +1,9 @@
 import os
-import json
-from typing import Optional, Dict, Any
 from datetime import datetime
-from upstash_redis import Redis
+from typing import Optional
+
 from dotenv import load_dotenv
+from upstash_redis import Redis
 
 from src.models.task_models import TaskData, TaskSchemas, UserSession
 

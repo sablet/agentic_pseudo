@@ -2,15 +2,14 @@
 
 import asyncio
 import logging
-from typing import TypeVar, Callable, Awaitable, Optional
 from functools import wraps
+from typing import Awaitable, Callable, Optional, TypeVar
 
 from .ai_engine import (
-    AIEngineError,
     AIEngineConnectionError,
+    AIEngineError,
     AIEngineQuotaError,
     AIEngineValidationError,
-    AIProvider,
 )
 
 logger = logging.getLogger(__name__)

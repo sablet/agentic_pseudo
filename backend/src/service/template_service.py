@@ -1,12 +1,14 @@
 """Template service layer."""
 
 from typing import List, Optional
+
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
 from sqlalchemy.orm import selectinload
+
+from src.exceptions import not_found_exception
 from src.models.database_models import Template
 from src.models.schemas import TemplateCreate, TemplateUpdate
-from src.exceptions import not_found_exception
 
 
 class TemplateService:
