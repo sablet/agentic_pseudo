@@ -1,21 +1,23 @@
 # Agentic Task Management System Backend
 
-Backend Phase 1 implementation for the Agentic Pseudo system with FastAPI, PostgreSQL, and comprehensive CRUD operations.
+Modern backend implementation for the Agentic Pseudo system with FastAPI, PostgreSQL, and comprehensive CRUD operations.
 
 ## Overview
 
-This system provides a robust backend API for managing agents, templates, conversations, and data units. It includes both the new PostgreSQL-based CRUD system and maintains backward compatibility with the existing task management functionality.
+This system provides a robust backend API for managing agents, agent templates, conversations, data units, and data unit categories. It features a modern PostgreSQL-based architecture while maintaining backward compatibility with the existing task management functionality.
 
 ## System Architecture
 
 ### Key Components
 
-#### New CRUD System (Phase 1)
+#### Modern CRUD System
 - **FastAPI Framework**: High-performance async web framework
 - **PostgreSQL Database**: Reliable relational database with async support
 - **Layered Architecture**: Clean separation of concerns (API → Service → Repository)
 - **JWT Authentication**: Secure token-based authentication
-- **Comprehensive CRUD**: Full Create, Read, Update, Delete operations
+- **Comprehensive CRUD**: Full Create, Read, Update, Delete operations for all entities
+- **Agent Templates**: Template-based agent creation and management
+- **Data Unit Categories**: Hierarchical data organization
 
 #### Legacy Task Management System
 - **Planner Agent**: Handles task decomposition, planning, and execution coordination
@@ -26,10 +28,12 @@ This system provides a robust backend API for managing agents, templates, conver
 
 ```mermaid
 graph TD
-    User[User] -->|Task Instructions| API[REST API]
-    API -->|Task Request| PlannerAgent[Planner Agent]
+    User[User] -->|CRUD Operations| API[REST API v1]
+    API -->|Legacy Tasks| PlannerAgent[Planner Agent]
+    API -->|Modern Operations| Services[Service Layer]
+    Services -->|Data Access| Database[(PostgreSQL)]
     PlannerAgent -->|Task Planning/Execution| SubAgents[Sub-Agents]
-    PlannerAgent -->|Data Storage/Reference| KVS[KVS Upstash]
+    PlannerAgent -->|Legacy Storage| KVS[KVS Upstash]
     SubAgents -->|Execution Results| PlannerAgent
     KVS -->|Schema/Data| PlannerAgent
 ```
@@ -38,11 +42,11 @@ graph TD
 
 - **Language**: Python 3.11+
 - **Framework**: FastAPI, Pydantic v2
-- **Database**: PostgreSQL (with AsyncPG), Upstash Redis (legacy)
+- **Database**: PostgreSQL (with AsyncPG), SQLite (testing), Upstash Redis (legacy)
 - **ORM**: SQLAlchemy 2.0 (async)
 - **Migrations**: Alembic
 - **Authentication**: JWT (PyJWT)
-- **LLM**: DSPy (Gemini Flash 2.5) - legacy system
+- **LLM**: Google Gemini API, DSPy (legacy)
 - **Package Management**: uv
 - **Code Quality**: Ruff, Pyright
 
@@ -77,13 +81,13 @@ DATABASE_URL=postgresql://user:password@localhost:5432/agentic_pseudo
 # Authentication
 SECRET_KEY=your-secret-key-here-change-this-in-production
 
-# Legacy Redis Configuration (for existing KVS)
+# Redis Configuration (for legacy KVS)
 UPSTASH_REDIS_REST_URL=your-redis-url
 UPSTASH_REDIS_REST_TOKEN=your-redis-token
 
-# OpenAI Configuration (for LLM agents)
-OPENAI_API_KEY=your-openai-api-key
-GEMINI_API_KEY=your_gemini_api_key
+# LLM Configuration
+GEMINI_API_KEY=your-gemini-api-key
+OPENAI_API_KEY=your-openai-api-key  # Optional, for legacy support
 ```
 
 ## Usage
@@ -111,7 +115,7 @@ uv run pytest tests/integration/ # Integration tests
 
 ## API Endpoints
 
-### New CRUD API (v1)
+### Modern CRUD API (v1)
 
 #### Agents
 - `POST /api/v1/agents/` - Create agent
@@ -119,6 +123,13 @@ uv run pytest tests/integration/ # Integration tests
 - `GET /api/v1/agents/{id}` - Get agent
 - `PUT /api/v1/agents/{id}` - Update agent
 - `DELETE /api/v1/agents/{id}` - Delete agent
+
+#### Agent Templates
+- `POST /api/v1/agent-templates/` - Create agent template
+- `GET /api/v1/agent-templates/` - List agent templates
+- `GET /api/v1/agent-templates/{id}` - Get agent template
+- `PUT /api/v1/agent-templates/{id}` - Update agent template
+- `DELETE /api/v1/agent-templates/{id}` - Delete agent template
 
 #### Templates
 - `POST /api/v1/templates/` - Create template
@@ -142,6 +153,13 @@ uv run pytest tests/integration/ # Integration tests
 - `GET /api/v1/data-units/{id}` - Get data unit
 - `PUT /api/v1/data-units/{id}` - Update data unit
 - `DELETE /api/v1/data-units/{id}` - Delete data unit
+
+#### Data Unit Categories
+- `POST /api/v1/data-unit-categories/` - Create data unit category
+- `GET /api/v1/data-unit-categories/` - List data unit categories
+- `GET /api/v1/data-unit-categories/{id}` - Get data unit category
+- `PUT /api/v1/data-unit-categories/{id}` - Update data unit category
+- `DELETE /api/v1/data-unit-categories/{id}` - Delete data unit category
 
 ### Legacy Task Management API
 
@@ -172,26 +190,34 @@ GET /api/tasks/status/{session_id}
 
 ```
 src/
-├── api/                    # FastAPI routers and endpoints
-│   ├── main.py            # Main FastAPI application
-│   ├── agents.py          # Agent endpoints
-│   ├── templates.py       # Template endpoints
-│   ├── conversations.py   # Conversation/Message endpoints
-│   └── data_units.py      # Data unit endpoints
-├── service/               # Business logic layer
+├── api/                         # FastAPI routers and endpoints
+│   ├── main.py                 # Main FastAPI application
+│   ├── agents.py               # Agent endpoints
+│   ├── agent_templates.py      # Agent template endpoints
+│   ├── templates.py            # Template endpoints
+│   ├── conversations.py        # Conversation/Message endpoints
+│   ├── data_units.py           # Data unit endpoints
+│   └── data_unit_categories.py # Data unit category endpoints
+├── service/                    # Business logic layer
 │   ├── agent_service.py
+│   ├── agent_template_service.py
 │   ├── template_service.py
 │   ├── conversation_service.py
 │   ├── data_unit_service.py
+│   ├── data_unit_category_service.py
+│   ├── gemini_engine.py        # Gemini API integration
+│   ├── ai_engine.py            # AI processing engine
 │   └── ... (legacy agents)
-├── models/                # Data models
-│   ├── database_models.py # SQLAlchemy models
-│   ├── schemas.py         # Pydantic schemas
-│   └── task_models.py     # Legacy task models
-├── repository/            # Data access layer (KVS operations - legacy)
-├── database.py           # Database configuration
-├── auth.py               # Authentication utilities
-└── exceptions.py         # Custom exceptions
+├── models/                     # Data models
+│   ├── database_models.py      # SQLAlchemy models
+│   ├── schemas.py              # Pydantic schemas
+│   ├── enums.py                # Enum definitions
+│   └── task_models.py          # Legacy task models
+├── repository/                 # Data access layer
+│   └── kvs_repository.py       # KVS operations (legacy)
+├── database.py                 # Database configuration
+├── auth.py                     # Authentication utilities
+└── exceptions.py               # Custom exceptions
 
 tests/
 ├── acceptance/    # Acceptance tests
@@ -200,17 +226,19 @@ tests/
 
 alembic/           # Database migrations
 output/            # Generated artifacts and reports directory
-docs/              # Design documents
 ```
 
 ## Key Features
 
-### New CRUD System (Phase 1)
+### Modern CRUD System
 - **Comprehensive CRUD Operations**: Full Create, Read, Update, Delete for all entities
+- **Agent Templates**: Template-based agent creation and management system
+- **Data Unit Categories**: Hierarchical data organization with category support
 - **Async Database Operations**: High-performance async PostgreSQL integration
 - **JWT Authentication**: Secure token-based authentication system
 - **Input Validation**: Comprehensive Pydantic validation with security focus
 - **Database Migrations**: Alembic for schema version management
+- **Gemini Integration**: Primary LLM provider with Google Gemini API
 - **Testing**: Comprehensive test coverage with SQLite in-memory testing
 - **Serverless Ready**: Optimized for Vercel deployment with Neon PostgreSQL
 
