@@ -66,3 +66,16 @@ def setup_test_database():
         os.environ["DATABASE_URL"] = original_db_url
     else:
         os.environ.pop("DATABASE_URL", None)
+
+
+@pytest.fixture
+async def db_session():
+    """Create database session for testing."""
+    from src.database import init_db, AsyncSessionLocal
+    
+    # Initialize database tables
+    await init_db()
+    
+    # Create session
+    async with AsyncSessionLocal() as session:
+        yield session

@@ -6,8 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from src.api.agents import router as agents_router
+from src.api.agent_templates import router as agent_templates_router
 from src.api.conversations import router as conversations_router
 from src.api.data_units import router as data_units_router
+from src.api.data_unit_categories import router as data_unit_categories_router
 from src.api.templates import router as templates_router
 from src.database import init_db
 from src.models.task_models import TaskData
@@ -26,10 +28,12 @@ app.add_middleware(
 )
 
 # Include new API routers
-app.include_router(agents_router, prefix="/api/v1")
+app.include_router(agents_router)
+app.include_router(agent_templates_router)
 app.include_router(templates_router, prefix="/api/v1")
 app.include_router(conversations_router, prefix="/api/v1")
 app.include_router(data_units_router, prefix="/api/v1")
+app.include_router(data_unit_categories_router)
 
 # Legacy services (maintain backward compatibility)
 kvs_repo = KVSRepository()

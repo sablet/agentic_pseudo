@@ -88,3 +88,5 @@ class UserSession(BaseModel):
     hearing_result: str = Field("", description="ヒアリング結果（Markdown形式）")
     created_at: datetime = Field(default_factory=datetime.now, description="作成日時")
     updated_at: datetime = Field(default_factory=datetime.now, description="更新日時")
+
+
